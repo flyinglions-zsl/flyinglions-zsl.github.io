@@ -141,3 +141,23 @@ super(Setter.withGroupKey(HystrixCommandGroupKey.Factory.asKey("xxxCommand"))
 
 ### 熔断相关
 
+```
+super(Setter.withGroupKey(HystrixCommandGroupKey.Factory.asKey("xxxCommand"))
+                .andCommandPropertiesDefaults(HystrixCommandProperties.Setter()
+                	      //是否开启熔断，默认true
+                        .withCircuitBreakerEnabled(true)
+                        //请求量阈值：将使断路器打开的滑动窗口中的最小请求数量。默认20；例如，如果值是20，那么如果在滑动窗口中只接收到19个请求(比如一个10秒的窗口)，即使所有19个请求都失败了，断路器也不会打开。
+                        .withCircuitBreakerRequestVolumeThreshold(10)
+                        //断路器打开后拒绝请求的时间量，即有效时间。默认5000ms
+                        .withCircuitBreakerSleepWindowInMilliseconds(5000)
+                        //错误百分比阈值；当请求错误率超过设定值，断路器就会打开，默认50，单位%
+                        .withCircuitBreakerErrorThresholdPercentage(50)
+                        )); 
+```
+
+### 线程池相关
+
+```
+
+```
+
