@@ -2,7 +2,7 @@
 title: hexo中md文件图片上传
 date: 2020-04-25 13:19:38
 categories:
-  - HEXO
+  - Hexo
 tags:
   - hexo-imag
 ---

@@ -2,9 +2,9 @@
 title: java-util-stringFormat
 date: 2020-05-08 16:44:21
 categories:
-  - java-util
+  - Java-Util
 tags:
-  - format
+  - string-format
 ---
 
 --记录String.format()相关用法
