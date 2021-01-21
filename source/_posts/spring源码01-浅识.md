@@ -27,11 +27,29 @@ tags:
 
 实现基本的springmvc执行流程(带web.xml的)
 
-### 1.2.1配置阶段
+### 1.2.1配置
 
 | 配置web.xml （DispatcherServlet）                            |
 | ------------------------------------------------------------ |
 | 配置init-param                                               |
 | 配置url-pattern                                              |
 | 仿照spring 配置同套的annotation 如 @Controller @Service @Autowired @RequestMapping ... |
+
+### 1.2.2初始化
+
+| 调用init()方法 加载配置文件                         |
+| --------------------------------------------------- |
+| IOC容器初始化                                       |
+| 扫描相关类 scan-package                             |
+| 实例化且加入Spring容器(反射机制)                    |
+| DI 操作，扫描容器中的实例，给没有赋值的属性自动赋值 |
+| 初始化handlerMapping 等 url和method进行关联映射     |
+
+#### 1.2.3运行
+
+| 调用doPost/doGet方法 获取request/response对象  |
+| ---------------------------------------------- |
+| 匹配handlerMapping                             |
+| 反射调用method.invoke()方法 执行相关逻辑       |
+| response.getWrite().write() 将结果返回给浏览器 |
 
