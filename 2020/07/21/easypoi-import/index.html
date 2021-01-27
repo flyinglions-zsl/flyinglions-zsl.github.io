@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>easypoi-import | Zhousl&#39;s Blog | 做她的英雄</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="easypoi">
+    <meta name="description" content="前言：最近需要做一个文件导入的功能，无需太复杂，于是想起了easypoi，仅此记录下实现过程。(基于springboot) 依赖123456789101112131415&lt;dependency&gt;       &lt;groupId&gt;cn.afterturn&lt;&#x2F;groupId&gt;       &lt;artifactId&gt;easypoi-base&lt;&#x2F;artif">
+<meta property="og:type" content="article">
+<meta property="og:title" content="easypoi-import">
+<meta property="og:url" content="https://github.com/flyinglions-zsl/flyinglions-zsl.github.io/2020/07/21/easypoi-import/index.html">
+<meta property="og:site_name" content="Zhousl&#39;s Blog">
+<meta property="og:description" content="前言：最近需要做一个文件导入的功能，无需太复杂，于是想起了easypoi，仅此记录下实现过程。(基于springboot) 依赖123456789101112131415&lt;dependency&gt;       &lt;groupId&gt;cn.afterturn&lt;&#x2F;groupId&gt;       &lt;artifactId&gt;easypoi-base&lt;&#x2F;artif">
+<meta property="og:image" content="https://github.com/2020/07/21/easypoi-import/excel%E6%A8%A1%E7%89%88.png">
+<meta property="article:published_time" content="2020-07-21T02:31:27.000Z">
+<meta property="article:modified_time" content="2020-10-29T14:21:33.953Z">
+<meta property="article:author" content="flyinglions-zsl">
+<meta property="article:tag" content="easypoi">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://github.com/2020/07/21/easypoi-import/excel%E6%A8%A1%E7%89%88.png">
+    
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="//unpkg.com/hexo-theme-material-indigo@latest/css/style.css">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu" class="hide" >
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/head.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/logo.png">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">flyinglions-zsl</h5>
+          <a href="mailto:709246423@qq.com" title="709246423@qq.com" class="mail">709246423@qq.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/"  >
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives/"  >
+                <i class="icon icon-lg icon-archives"></i>
+                归档
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags/"  >
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories/"  >
+                <i class="icon icon-lg icon-th-list"></i>
+                目录
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/flyinglions-zsl" target="_blank" >
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://www.cnblogs.com/flyinglion/" target="_blank" rel="noopener"  >
+                <i class="icon icon-lg icon-link"></i>
+                博客园
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">easypoi-import</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="输入感兴趣的关键字">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">easypoi-import</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2020-07-21T02:31:27.000Z" itemprop="datePublished" class="page-time">
+  2020-07-21
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/tools/">tools</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#依赖"><span class="post-toc-number">1.</span> <span class="post-toc-text">依赖</span></a></li><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#创建实体类"><span class="post-toc-number">2.</span> <span class="post-toc-text">创建实体类</span></a></li><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#编写工具类"><span class="post-toc-number">3.</span> <span class="post-toc-text">编写工具类</span></a></li><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#数据校验"><span class="post-toc-number">4.</span> <span class="post-toc-text">数据校验</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#注解"><span class="post-toc-number">4.1.</span> <span class="post-toc-text">注解</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#自定义handler类"><span class="post-toc-number">4.2.</span> <span class="post-toc-text">自定义handler类</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#源码跟进看下基本思路"><span class="post-toc-number">4.3.</span> <span class="post-toc-text">源码跟进看下基本思路</span></a></li></ol></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-easypoi-import"
+  class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">easypoi-import</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2020-07-21 10:31:27" datetime="2020-07-21T02:31:27.000Z"  itemprop="datePublished">2020-07-21</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/tools/">tools</a></li></ul>
+
+
+
+            
+<span id="busuanzi_container_page_pv" title="文章总阅读量" style='display:none'>
+    <i class="icon icon-eye icon-pr"></i><span id="busuanzi_value_page_pv"></span>
+</span>
+
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <p>前言：最近需要做一个文件导入的功能，无需太复杂，于是想起了easypoi，仅此记录下实现过程。(基于springboot)</p>
+<h1 id="依赖"><a href="#依赖" class="headerlink" title="依赖"></a>依赖</h1><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">&lt;dependency&gt;</span><br><span class="line">       &lt;groupId&gt;cn.afterturn&lt;/groupId&gt;</span><br><span class="line">       &lt;artifactId&gt;easypoi-base&lt;/artifactId&gt;</span><br><span class="line">       &lt;version&gt;3.0.3&lt;/version&gt;</span><br><span class="line">   &lt;/dependency&gt;</span><br><span class="line">   &lt;dependency&gt;</span><br><span class="line">       &lt;groupId&gt;cn.afterturn&lt;/groupId&gt;</span><br><span class="line">       &lt;artifactId&gt;easypoi-web&lt;/artifactId&gt;</span><br><span class="line">       &lt;version&gt;3.0.3&lt;/version&gt;</span><br><span class="line">   &lt;/dependency&gt;</span><br><span class="line">   &lt;dependency&gt;</span><br><span class="line">       &lt;groupId&gt;cn.afterturn&lt;/groupId&gt;</span><br><span class="line">       &lt;artifactId&gt;easypoi-annotation&lt;/artifactId&gt;</span><br><span class="line">       &lt;version&gt;3.0.3&lt;/version&gt;</span><br><span class="line">   &lt;/dependency&gt;</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="创建实体类"><a href="#创建实体类" class="headerlink" title="创建实体类"></a>创建实体类</h1><p>用过esaypoi的都清楚，必须有个实体类来接收相关字段数据。</p>
+<p>对照导入excel的模版，建立导入实体类(需实现IExcelModel接口)：</p>
+<img src="/2020/07/21/easypoi-import/excel%E6%A8%A1%E7%89%88.png" class="">
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">--importEntity</span><br><span class="line"><span class="meta">@Excel</span>(name = <span class="string">"客户姓名"</span>, orderNum = <span class="string">"1"</span>)</span><br><span class="line"><span class="keyword">private</span> String name;</span><br><span class="line"><span class="meta">@Excel</span>(name = <span class="string">"客户编号"</span>, orderNum = <span class="string">"0"</span>)</span><br><span class="line"><span class="keyword">private</span> String clientId;</span><br><span class="line"><span class="meta">@Excel</span>(name = <span class="string">"营业部"</span>, orderNum = <span class="string">"2"</span>)</span><br><span class="line"><span class="keyword">private</span> String branchName;</span><br><span class="line"><span class="meta">@Excel</span>(name = <span class="string">"激励计划"</span>, orderNum = <span class="string">"3"</span>)</span><br><span class="line"><span class="keyword">private</span> String jljhName;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>对于特殊的可以确定类型的字段：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Excel</span>(name = <span class="string">"解锁期"</span>, replace = &#123;<span class="string">"一期_1"</span>, <span class="string">"二期_2"</span>,<span class="string">"三期_3"</span>&#125;</span><br><span class="line"><span class="keyword">private</span> String jsq;</span><br><span class="line">       </span><br><span class="line"><span class="meta">@ExcelCollection</span>(name = <span class="string">"期权信息"</span>)</span><br><span class="line"><span class="keyword">private</span> List&lt;QqEntity&gt; qqList;</span><br><span class="line">--此处QqEntity同上面</span><br><span class="line">       </span><br><span class="line"><span class="meta">@Excel</span>(name = <span class="string">"操作日期"</span>, exportFormat = <span class="string">"yyyy-MM-dd"</span>)<span class="comment">//导入</span></span><br><span class="line"><span class="keyword">private</span> Date operateDate;</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="编写工具类"><a href="#编写工具类" class="headerlink" title="编写工具类"></a>编写工具类</h1><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;T&gt; <span class="function">ExcelImportResult&lt;T&gt; <span class="title">importExcel</span><span class="params">(MultipartFile file, Integer titleRows, Integer headerRows,</span></span></span><br><span class="line"><span class="function"><span class="params">			Class&lt;?&gt; pojoClass,IExcelVerifyHandler&lt;?&gt; excelVerifyHandler)</span> <span class="keyword">throws</span> IOException, Exception </span>&#123;  <span class="comment">//IExcelVerifyHandler&lt;?&gt; excelVerifyHandler 与校验有关，看个人，后面讲解</span></span><br><span class="line">		<span class="keyword">if</span> (file == <span class="keyword">null</span>) &#123;</span><br><span class="line">			<span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		ImportParams params = <span class="keyword">new</span> ImportParams();</span><br><span class="line">	  <span class="comment">//params.setTitleRows(titleRows); 表标题，没有默认0</span></span><br><span class="line">		<span class="comment">//params.setHeadRows(headerRows); 涉及表头文字占用几行</span></span><br><span class="line">		params.setNeedVerfiy(<span class="keyword">true</span>); <span class="comment">//导入数据的校验</span></span><br><span class="line">		params.setVerifyHanlder(excelVerifyHandler); <span class="comment">//设置自定义handler进行校验</span></span><br><span class="line">		ExcelImportResult&lt;T&gt; list = <span class="keyword">null</span>;</span><br><span class="line">		<span class="keyword">try</span> &#123;</span><br><span class="line">			list = ExcelImportUtil.importExcelMore(file.getInputStream(), pojoClass, params);</span><br><span class="line">		&#125; <span class="keyword">catch</span> (NoSuchElementException e) &#123;</span><br><span class="line">			<span class="keyword">throw</span> <span class="keyword">new</span> NormalException(<span class="string">"excel文件不能为空"</span>);</span><br><span class="line">		&#125; </span><br><span class="line">		<span class="keyword">return</span> list;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="数据校验"><a href="#数据校验" class="headerlink" title="数据校验"></a>数据校验</h1><p>数据的基本校验可以由两种方式实现：</p>
+<h2 id="注解"><a href="#注解" class="headerlink" title="注解"></a>注解</h2><p>EasyPOI 支持 Hibernate Validator ,于是可以采用注解来实现;不过基本是写比较简单的判断。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Excel</span>(name = <span class="string">"客户编号"</span>, orderNum = <span class="string">"0"</span>)</span><br><span class="line"><span class="meta">@NotBlank</span>(message = <span class="string">"[客户编号]不能为空"</span>)</span><br><span class="line"><span class="keyword">private</span> String clientId;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Excel</span>(name = <span class="string">"解锁期"</span>, replace = &#123;<span class="string">"一期_1"</span>, <span class="string">"二期_2"</span>,<span class="string">"三期_3"</span>&#125;</span><br><span class="line"><span class="meta">@Pattern</span>(regexp = <span class="string">"[123]"</span>, message = <span class="string">"期数错误"</span>)</span><br><span class="line"><span class="keyword">private</span> String jsq;</span><br><span class="line">       </span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> String date_pattern = <span class="string">"yyyy-MM-dd"</span>;</span><br><span class="line"><span class="meta">@Excel</span>(name = <span class="string">"操作日期"</span>)</span><br><span class="line"><span class="meta">@Pattern</span>(regexp = date_pattern, message = <span class="string">"日期格式错误"</span>)</span><br><span class="line"><span class="keyword">private</span> Date operateDate;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="自定义handler类"><a href="#自定义handler类" class="headerlink" title="自定义handler类"></a>自定义handler类</h2><p>如需实现复杂的判断逻辑，可以通过实现IExcelVerifyHandler 接口，重写verifyHandler方法来计算、判断。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">QqIExcelVerifyHandler</span> <span class="keyword">implements</span> <span class="title">IExcelVerifyHandler</span> </span>&#123;</span><br><span class="line">	<span class="keyword">private</span> QqDao dao;</span><br><span class="line">		</span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> ExcelVerifyHanlderResult <span class="title">verifyHandler</span><span class="params">(Object obj)</span> </span>&#123;</span><br><span class="line">		......</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>此处即可说明为何编写工具类多传一个<strong>IExcelVerifyHandler</strong> 参数。 且返回类型是ExcelVerifyHanlderResult</p>
+<h2 id="源码跟进看下基本思路"><a href="#源码跟进看下基本思路" class="headerlink" title="源码跟进看下基本思路"></a>源码跟进看下基本思路</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">1</span>.importExcelMore 进去</span><br><span class="line"><span class="number">2</span>.importExcelByIs 子方法进入</span><br><span class="line"> 此时方法有两个list： </span><br><span class="line">   <span class="keyword">private</span> List&lt;T&gt; list; <span class="comment">//用来存储无误的数据</span></span><br><span class="line">   <span class="keyword">private</span> List&lt;T&gt; failList; <span class="comment">//用来存储出错的数据</span></span><br><span class="line"><span class="number">3</span>.result.addAll(<span class="keyword">this</span>.importExcel(result, book.getSheetAt(i), pojoClass, params, pictures));</span><br><span class="line"><span class="number">4</span>.importExcel 进去</span><br><span class="line">  <span class="number">4.1</span>获取所有带<span class="meta">@Excel</span>注解的feilds，也就是导入excel的表头对应字段</span><br><span class="line">  <span class="number">4.2</span>做一些表字段顺序、是否缺失的校验</span><br><span class="line">  <span class="number">4.3</span>其实首先会判断ExcelCollectionParams，猜测是<span class="meta">@ExcelCollection</span>注解相关</span><br><span class="line">  <span class="number">4.4</span>	<span class="keyword">if</span> (<span class="keyword">this</span>.verifyingDataValidity(object, row, params, pojoClass)) &#123;</span><br><span class="line">    collection.add(object);</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="keyword">this</span>.failCollection.add(object);</span><br><span class="line">  &#125;</span><br><span class="line">  此处调用自定义handler的 verifyHandler方法进行校验 (此时传的参数就是 自定义的导入entity对象)</span><br><span class="line">   <span class="number">4.5</span>在verifyHandler方法进行校验方法中，根据业务条件判断，最终可以遍历拼接错误msg</span><br><span class="line">   <span class="number">4.6</span>此处进行无误和出错数据List的装载</span><br></pre></td></tr></table></figure>
+
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最后更新时间：<time datetime="2020-10-29T14:21:33.953Z" itemprop="dateUpdated">2020-10-29 22:21:33</time>
+</span><br>
+
+
+        
+        <a href="/2020/07/21/easypoi-import/" target="_blank" rel="external">https://github.com/flyinglions-zsl/flyinglions-zsl.github.io/2020/07/21/easypoi-import/</a>
+        
+    </div>
+    
+    <footer>
+        <a href="https://github.com/flyinglions-zsl/flyinglions-zsl.github.io">
+            <img src="/img/logo.png" alt="flyinglions-zsl">
+            flyinglions-zsl
+        </a>
+    </footer>
+</blockquote>
+
+        
+<div class="page-reward">
+    <a id="rewardBtn" href="javascript:;" class="page-reward-btn waves-effect waves-circle waves-light">赏</a>
+</div>
+
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/easypoi/" rel="tag">easypoi</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://github.com/flyinglions-zsl/flyinglions-zsl.github.io/2020/07/21/easypoi-import/&title=《easypoi-import》 — Zhousl's Blog&pic=https://github.com/flyinglions-zsl/flyinglions-zsl.github.io/img/logo.png" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://github.com/flyinglions-zsl/flyinglions-zsl.github.io/2020/07/21/easypoi-import/&title=《easypoi-import》 — Zhousl's Blog&source=" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://github.com/flyinglions-zsl/flyinglions-zsl.github.io/2020/07/21/easypoi-import/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《easypoi-import》 — Zhousl's Blog&url=https://github.com/flyinglions-zsl/flyinglions-zsl.github.io/2020/07/21/easypoi-import/&via=https://github.com/flyinglions-zsl/flyinglions-zsl.github.io" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://github.com/flyinglions-zsl/flyinglions-zsl.github.io/2020/07/21/easypoi-import/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between">
+  
+    <div class="waves-block waves-effect prev">
+      <a href="/2020/07/22/easypoi-export/" id="post-prev" class="post-nav-link">
+        <div class="tips"><i class="icon icon-angle-left icon-lg icon-pr"></i> Prev</div>
+        <h4 class="title">easypoi-export</h4>
+      </a>
+    </div>
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/2020/05/08/java-util-stringFormat/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">java-util-stringFormat</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</article>
+
+<div id="reward" class="page-modal reward-lay">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <h3 class="reward-title">
+        <i class="icon icon-quote-left"></i>
+        谢谢大爷~
+        <i class="icon icon-quote-right"></i>
+    </h3>
+    <div class="reward-content">
+        
+        <div class="reward-code">
+            <img id="rewardCode" src="/img/wx_money.jpg" alt="打赏二维码">
+        </div>
+        
+        <label class="reward-toggle">
+            <input id="rewardToggle" type="checkbox" class="reward-toggle-check"
+                data-wechat="/img/wx_money.jpg" data-alipay="/img/zfb_money.jpg">
+            <div class="reward-toggle-ctrol">
+                <span class="reward-toggle-item wechat">微信</span>
+                <span class="reward-toggle-label"></span>
+                <span class="reward-toggle-item alipay">支付宝</span>
+            </div>
+        </label>
+        
+    </div>
+</div>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+<p>
+    <span id="busuanzi_container_site_uv" style='display:none'>
+        站点总访客数：<span id="busuanzi_value_site_uv"></span>
+    </span>
+    <span id="busuanzi_container_site_pv" style='display:none'>
+        站点总访问量：<span id="busuanzi_value_site_pv"></span>
+    </span>
+</p>
+
+
+        <p>
+            
+            <span>博客内容遵循 <a rel="license noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" target="_blank">知识共享 署名 - 非商业性 - 相同方式共享 4.0 国际协议</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>flyinglions-zsl &copy; 2020 - 2021</span>
+            <span>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://github.com/flyinglions-zsl/flyinglions-zsl.github.io/2020/07/21/easypoi-import/&title=《easypoi-import》 — Zhousl's Blog&pic=https://github.com/flyinglions-zsl/flyinglions-zsl.github.io/img/logo.png" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://github.com/flyinglions-zsl/flyinglions-zsl.github.io/2020/07/21/easypoi-import/&title=《easypoi-import》 — Zhousl's Blog&source=" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://github.com/flyinglions-zsl/flyinglions-zsl.github.io/2020/07/21/easypoi-import/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《easypoi-import》 — Zhousl's Blog&url=https://github.com/flyinglions-zsl/flyinglions-zsl.github.io/2020/07/21/easypoi-import/&via=https://github.com/flyinglions-zsl/flyinglions-zsl.github.io" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://github.com/flyinglions-zsl/flyinglions-zsl.github.io/2020/07/21/easypoi-import/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://github.com/flyinglions-zsl/flyinglions-zsl.github.io/2020/07/21/easypoi-import/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: true };
+
+
+</script>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/main.min.js"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/search.min.js" async></script>
+
+
+
+
+
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '死鬼去哪里了！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!又好了!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>
