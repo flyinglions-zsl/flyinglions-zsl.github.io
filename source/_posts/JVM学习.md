@@ -50,9 +50,9 @@ classLoader->即app类加载器，launcher源码体现。
 
 ![image.png](https://cdn.nlark.com/yuque/0/2021/png/705191/1616938423035-31c89842-622b-48db-a80a-20c763c35da5.png)
 
-说明：JVM定义从应用程序类加载器开始加载(具体可看launcher源码 方法getClassLoader())，加载某个类时会委托父加载器寻找目标类，找不到再委托上层父记载器加载，如果所有父加载器都无法在自己的加载类路径下找到目标类，则向下查找并载入目标类。
+说明：JVM定义从应用程序类加载器开始加载(具体可看launcher源码 方法getClassLoader())，加载某个类时会委托父加载器寻找目标类，找不到再委托上层父加载器加载，如果所有父加载器都无法在自己的加载类路径下找到目标类，则向下查找并载入目标类。
 
-比如User类，先找到app类加载器加载，app类加载器先委托ext加载器加载，ext加载器再委托引导类加载器加载，引导类加载器在其类加载路径中找不到User类，则向下退回加载User类的请求，ext收到回复就自己加载，ext在其类加载路径中找不到User类，又向下退回给app类加载器，app类加载器则在自己的类加载路径里找User类，找到了则自己加载。95%以上都是app类加载器应用。(源码->ClassLoader 的loadClas方法，重点->UrlClassLoader的findCass())
+比如User类，先找到app类加载器加载，app类加载器先委托ext加载器加载，ext加载器再委托引导类加载器加载，引导类加载器在其类加载路径中找不到User类，则向下退回加载User类的请求，ext收到回复就自己加载，ext在其类加载路径中找不到User类，又向下退回给app类加载器，app类加载器则在自己的类加载路径里找User类，找到了则自己加载。95%以上都是app类加载器应用。(源码->appClassLoader的loadClass，跳到super的ClassLoader 的loadClas方法，重点->UrlClassLoader的findCass(name)，装载类即 defineClass() 去类路径拿到class文件)
 
 
 
@@ -60,9 +60,9 @@ classLoader->即app类加载器，launcher源码体现。
 
 - 沙箱安全机制：自己的java.lang.String.class类不会被加载，防止核心API库被篡改。
 
-根据双亲委派机制，先会向上加载一次，String类是引导类加载器加载的，这时候引导类加载器找到的是JDK自己的String类且返回，再向下回到app类中，这时候调用则会报错。
+根据双亲委派机制，先会向上加载一次，String类是引导类加载器加载的，这时候引导类加载器找到的是JDK自己的String类且返回(只会加载自己定义的类)，再向下回到app类中，这时候调用则会报错。
 
-- 避免类的重复加载：向上委托，如果父加载器已经加载过了某个类，再向下返回时，子ClassLoader就不会再次加载一次，保证被加载类的唯一性。
+- 避免类的重复加载：向上委托，如果父加载器已经加载过了某个类，则会直接返回，子ClassLoader就不会再次加载一次，保证被加载类的唯一性。
 
 
 
@@ -76,10 +76,16 @@ classLoader->即app类加载器，launcher源码体现。
 
 初始化自定义类加载器，会先初始化父类加载器（默认是app类加载器），其中把自定义类加载器的父类设定为app类加载器，符合双亲委派机制。
 
-核心就是fingClass方法。
+1继承ClassLoader
+
+2重写findClass方法
+
+核心就是UrlClassLoader的loadClass()方法(实现双亲委派机制)和findClass()方法(装载类)。
 
 
 
 ## 打破双亲委派机制
+
+不委托父加载器先加载了，在自定义加载器获得了直接返回。
 
 重写loadClass方法   去掉双亲委派的逻辑
