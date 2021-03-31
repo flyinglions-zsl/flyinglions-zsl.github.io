@@ -30,8 +30,14 @@
 <meta property="og:image" content="https://cdn.nlark.com/yuque/0/2021/png/705191/1616934882154-8796864a-0a25-4773-83da-c87b0436e2b8.png?x-oss-process=image%252Fresize%252Cw_1500">
 <meta property="og:image" content="https://cdn.nlark.com/yuque/0/2021/png/705191/1616850631833-55a377a7-b126-40a1-a447-02cec032970e.png?x-oss-process=image%252Fresize%252Cw_1500">
 <meta property="og:image" content="https://cdn.nlark.com/yuque/0/2021/png/705191/1616938423035-31c89842-622b-48db-a80a-20c763c35da5.png">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2021/png/705191/1617201607561-5faaec31-3353-4ed4-9c6e-5df99c95ae7e.png">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2021/png/705191/1617203787171-c03c0e63-0f00-4afc-bdeb-9c7cd7408ab5.png">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2021/png/705191/1617204051112-2efad6e6-54b5-4376-ad5e-7bebf807b85c.png?x-oss-process=image%252Fresize%252Cw_1500">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2021/png/705191/1617203827373-5158c452-ea47-405b-b62d-e4090f98a6c4.png">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2021/png/705191/1617204170110-790f84ca-85f2-4e2c-bd35-07841e87b88a.png">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2021/png/705191/1617204681301-ed1af7be-6487-445a-b0ee-271077c47d4f.png">
 <meta property="article:published_time" content="2021-03-28T14:59:18.000Z">
-<meta property="article:modified_time" content="2021-03-29T15:04:23.431Z">
+<meta property="article:modified_time" content="2021-03-31T15:34:56.241Z">
 <meta property="article:author" content="flyinglions-zsl">
 <meta property="article:tag" content="JVM加载过程">
 <meta name="twitter:card" content="summary">
@@ -168,7 +174,7 @@
     <aside class="post-widget">
         <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
             <h4>TOC</h4>
-            <ol class="post-toc"><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#JVM类加载"><span class="post-toc-number">1.</span> <span class="post-toc-text">JVM类加载</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#JVM整体的加载过程"><span class="post-toc-number">1.1.</span> <span class="post-toc-text">JVM整体的加载过程</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#loadClass的类加载过程"><span class="post-toc-number">1.2.</span> <span class="post-toc-text">loadClass的类加载过程</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#类加载器"><span class="post-toc-number">1.3.</span> <span class="post-toc-text">类加载器</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#双亲委派机制"><span class="post-toc-number">1.4.</span> <span class="post-toc-text">双亲委派机制</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#全盘委托机制"><span class="post-toc-number">1.5.</span> <span class="post-toc-text">全盘委托机制</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#自定义类加载器"><span class="post-toc-number">1.6.</span> <span class="post-toc-text">自定义类加载器</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#打破双亲委派机制"><span class="post-toc-number">1.7.</span> <span class="post-toc-text">打破双亲委派机制</span></a></li></ol></li></ol>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#JVM类加载"><span class="post-toc-number">1.</span> <span class="post-toc-text">JVM类加载</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#JVM整体的加载过程"><span class="post-toc-number">1.1.</span> <span class="post-toc-text">JVM整体的加载过程</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#loadClass的类加载过程"><span class="post-toc-number">1.2.</span> <span class="post-toc-text">loadClass的类加载过程</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#类加载器"><span class="post-toc-number">1.3.</span> <span class="post-toc-text">类加载器</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#双亲委派机制"><span class="post-toc-number">1.4.</span> <span class="post-toc-text">双亲委派机制</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#全盘委托机制"><span class="post-toc-number">1.5.</span> <span class="post-toc-text">全盘委托机制</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#自定义类加载器"><span class="post-toc-number">1.6.</span> <span class="post-toc-text">自定义类加载器</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#打破双亲委派机制"><span class="post-toc-number">1.7.</span> <span class="post-toc-text">打破双亲委派机制</span></a></li></ol></li><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#JVM内存模型"><span class="post-toc-number">2.</span> <span class="post-toc-text">JVM内存模型</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#概念图"><span class="post-toc-number">2.1.</span> <span class="post-toc-text">概念图</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#字节码解析"><span class="post-toc-number">2.2.</span> <span class="post-toc-text">字节码解析</span></a></li></ol></li></ol>
         </nav>
     </aside>
 
@@ -247,7 +253,133 @@
 <p>核心就是UrlClassLoader的loadClass()方法(实现双亲委派机制)和findClass()方法(装载类)。</p>
 <h2 id="打破双亲委派机制"><a href="#打破双亲委派机制" class="headerlink" title="打破双亲委派机制"></a>打破双亲委派机制</h2><p>不委托父加载器先加载了，在自定义加载器获得了直接返回。</p>
 <p>重写loadClass方法   去掉双亲委派的逻辑</p>
+<h1 id="JVM内存模型"><a href="#JVM内存模型" class="headerlink" title="JVM内存模型"></a>JVM内存模型</h1><p>不同的机器对应的JVM处理机器码的方式都不同，如windows、mac系统</p>
+<p>javap -c xx.class看汇编c</p>
+<h2 id="概念图"><a href="#概念图" class="headerlink" title="概念图"></a>概念图</h2><figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://cdn.nlark.com/yuque/0/2021/png/705191/1617201607561-5faaec31-3353-4ed4-9c6e-5df99c95ae7e.png" alt="image.png" title="">
+                </div>
+                <div class="image-caption">image.png</div>
+            </figure>
 
+<p>栈帧：一个方法对应一块栈帧区域，基本就是数据结构中的栈，特性先进后出，后进先出，符合代码执行特性。</p>
+<p>操作数栈：临时的内存空间</p>
+<p>验证代码：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">package com.gx.demo.jvm;</span><br><span class="line"></span><br><span class="line">public class MyMath &#123;</span><br><span class="line"></span><br><span class="line">    public int calculate(int a, int b)&#123;</span><br><span class="line">        int result &#x3D; 0;</span><br><span class="line">        result &#x3D; (a + b)*5;</span><br><span class="line">        return result;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        MyMath myMath &#x3D; new MyMath();</span><br><span class="line">        int res &#x3D; myMath.calculate(3, 7);</span><br><span class="line">        System.out.println(res);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>根据验证代码 走一遍逻辑</p>
+<p>1代码</p>
+<p>2查指令 百度网盘下载</p>
+<p>3画栈中局部变量和操作数栈 变化的图逻辑</p>
+<p>4堆与方法区的关系</p>
+<p>5堆与栈的关系</p>
+<p>6程序计数器 变化，具体xx.class由字节码执行引擎执行</p>
+<h2 id="字节码解析"><a href="#字节码解析" class="headerlink" title="字节码解析"></a>字节码解析</h2><p>javap -c MyMath.class</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  public com.gx.demo.jvm.MyMath();</span><br><span class="line">    descriptor: ()V</span><br><span class="line">    flags: ACC_PUBLIC</span><br><span class="line">    Code:</span><br><span class="line">      stack&#x3D;1, locals&#x3D;1, args_size&#x3D;1</span><br><span class="line">         0: aload_0</span><br><span class="line">         1: invokespecial #1                  &#x2F;&#x2F; Method java&#x2F;lang&#x2F;Object.&quot;&lt;init&gt;&quot;:()V</span><br><span class="line">         4: return</span><br><span class="line">      LineNumberTable:</span><br><span class="line">        line 3: 0</span><br><span class="line">      LocalVariableTable:</span><br><span class="line">        Start  Length  Slot  Name   Signature</span><br><span class="line">            0       5     0  this   Lcom&#x2F;gx&#x2F;demo&#x2F;jvm&#x2F;MyMath;</span><br><span class="line"></span><br><span class="line">  public int calculate(int, int);</span><br><span class="line">    descriptor: (II)I</span><br><span class="line">    flags: ACC_PUBLIC</span><br><span class="line">    Code:&#x2F;&#x2F;一个方法对应一个栈帧，即有自己的局部变量表</span><br><span class="line">      stack&#x3D;2, locals&#x3D;4, args_size&#x3D;3&#x2F;&#x2F;a-&gt;局部变量1 b-&gt;局部变量2</span><br><span class="line">         0: iconst_0&#x2F;&#x2F;将int类型常量0压入栈 常量0</span><br><span class="line">         1: istore_3&#x2F;&#x2F; 将int类型值存入局部变量3 参数result</span><br><span class="line">         2: iload_1&#x2F;&#x2F;从局部变量1中装载int类型值 参数a</span><br><span class="line">         3: iload_2&#x2F;&#x2F;从局部变量2中装载int类型值 参数b</span><br><span class="line">         4: iadd&#x2F;&#x2F;执行int类型的加法</span><br><span class="line">         5: iconst_5&#x2F;&#x2F;将int类型常量5压入栈 得到a+b&#x3D;5</span><br><span class="line">         6: imul&#x2F;&#x2F;乘法</span><br><span class="line">         7: istore_3&#x2F;&#x2F; 将int类型值存入局部变量3 即5*10&#x3D;50</span><br><span class="line">         8: iload_3&#x2F;&#x2F;从局部变量2中装载int类型值 50</span><br><span class="line">         9: ireturn&#x2F;&#x2F;返回</span><br><span class="line">      LineNumberTable:</span><br><span class="line">        line 6: 0</span><br><span class="line">        line 7: 2</span><br><span class="line">        line 8: 8</span><br><span class="line">      LocalVariableTable:&#x2F;&#x2F;局部变量</span><br><span class="line">        Start  Length  Slot  Name   Signature</span><br><span class="line">            0      10     0  this   Lcom&#x2F;gx&#x2F;demo&#x2F;jvm&#x2F;MyMath;</span><br><span class="line">            0      10     1     a   I</span><br><span class="line">            0      10     2     b   I</span><br><span class="line">            2       8     3 result   I</span><br><span class="line"></span><br><span class="line">  public static void main(java.lang.String[]);</span><br><span class="line">    descriptor: ([Ljava&#x2F;lang&#x2F;String;)V</span><br><span class="line">    flags: ACC_PUBLIC, ACC_STATIC</span><br><span class="line">    Code:</span><br><span class="line">      stack&#x3D;3, locals&#x3D;3, args_size&#x3D;1</span><br><span class="line">         0: new           #2                  &#x2F;&#x2F; class com&#x2F;gx&#x2F;demo&#x2F;jvm&#x2F;MyMath</span><br><span class="line">         3: dup&#x2F;&#x2F;复制栈顶部一个字长内容</span><br><span class="line">         4: invokespecial #3                  &#x2F;&#x2F; Method &quot;&lt;init&gt;&quot;:()V</span><br><span class="line">         7: astore_1&#x2F;&#x2F;将引用类型或returnAddress类型值存入局部变量1 参数new的myMath，存的堆地址</span><br><span class="line">         8: aload_1&#x2F;&#x2F;从局部变量1中装载引用类型值</span><br><span class="line">         9: iconst_3&#x2F;&#x2F;将int类型常量3压入栈</span><br><span class="line">        10: bipush        7   &#x2F;&#x2F;将一个8位带符号整数压入栈 7 也占一次操作(11)</span><br><span class="line">          &#x2F;&#x2F;iconst_5 &#x3D; 8 (0x8)指令码</span><br><span class="line">          &#x2F;&#x2F;bipush &#x3D; 16 (0x10)指令码</span><br><span class="line">        12: invokevirtual #4  &#x2F;&#x2F;调度对象的方法   &#x2F;&#x2F; Method calculate:(II)I</span><br><span class="line">        15: istore_2&#x2F;&#x2F;将int类型值存入局部变量2 参数res</span><br><span class="line">        16: getstatic     #5                  &#x2F;&#x2F; Field java&#x2F;lang&#x2F;System.out:Ljava&#x2F;io&#x2F;PrintStream;</span><br><span class="line">        19: iload_2&#x2F;&#x2F;从局部变量2中装载int类型值 calculate返回的结果50</span><br><span class="line">        20: invokevirtual #6                  &#x2F;&#x2F; Method java&#x2F;io&#x2F;PrintStream.println:(I)V</span><br><span class="line">        23: return</span><br><span class="line">      LineNumberTable:</span><br><span class="line">        line 12: 0</span><br><span class="line">        line 13: 8</span><br><span class="line">        line 14: 16</span><br><span class="line">        line 15: 23</span><br><span class="line">      LocalVariableTable:</span><br><span class="line">        Start  Length  Slot  Name   Signature</span><br><span class="line">            0      24     0  args   [Ljava&#x2F;lang&#x2F;String;</span><br><span class="line">            8      16     1 myMath   Lcom&#x2F;gx&#x2F;demo&#x2F;jvm&#x2F;MyMath;</span><br><span class="line">           16       8     2   res   I</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>此处涉及一个常量推送到栈顶中，不同范围指令不同：</p>
+<p>iconst_*  即-1-5 </p>
+<p>bipush    即<strong>-128~127</strong> </p>
+<p>sipush    即-32768~32767 </p>
+<p>ldc         即<strong>-2147483648~2147483647</strong> </p>
+<p>具体可见官网：<a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-6.html#jvms-6.5.iconst_i" target="_blank" rel="noopener">https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-6.html#jvms-6.5.iconst_i</a></p>
+<p>icons-》push int constant</p>
+<p>bipush-》push byte , etc.</p>
+<table>
+<thead>
+<tr>
+<th>指令名称</th>
+<th>指令码（对应class码文件）</th>
+<th>数值</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><em>iconst_m1</em></td>
+<td>2 (0x2)</td>
+<td>-1</td>
+</tr>
+<tr>
+<td>*iconst_0 *</td>
+<td>3 (0x3)</td>
+<td>0</td>
+</tr>
+<tr>
+<td><em>iconst_1</em></td>
+<td>4 (0x4)</td>
+<td>1</td>
+</tr>
+<tr>
+<td><em>iconst_2</em></td>
+<td>5 (0x5)</td>
+<td>2</td>
+</tr>
+<tr>
+<td><em>iconst_3</em></td>
+<td>6 (0x6)</td>
+<td>3</td>
+</tr>
+<tr>
+<td><em>iconst_4</em></td>
+<td>7 (0x7)</td>
+<td>4</td>
+</tr>
+<tr>
+<td><em>iconst_5</em></td>
+<td>8 (0x8)</td>
+<td>5</td>
+</tr>
+</tbody></table>
+<p>简单说下calculate方法 运作情况：</p>
+<p>1、局部变量和操作数栈各自对应</p>
+<p>–》0: iconst_0，0代表程序计数器的位置，每次操作完都会更新</p>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://cdn.nlark.com/yuque/0/2021/png/705191/1617203787171-c03c0e63-0f00-4afc-bdeb-9c7cd7408ab5.png" alt="image.png" title="">
+                </div>
+                <div class="image-caption">image.png</div>
+            </figure>
+
+
+
+<p>2、由字节码执行引擎执行操作数为1的步骤,且更新操作数(由字节码执行引擎修改)</p>
+<p>–》1: istore_3 程序计数器=1</p>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://cdn.nlark.com/yuque/0/2021/png/705191/1617204051112-2efad6e6-54b5-4376-ad5e-7bebf807b85c.png?x-oss-process=image%2Fresize%2Cw_1500" alt="image.png" title="">
+                </div>
+                <div class="image-caption">image.png</div>
+            </figure>
+
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://cdn.nlark.com/yuque/0/2021/png/705191/1617203827373-5158c452-ea47-405b-b62d-e4090f98a6c4.png" alt="image.png" title="">
+                </div>
+                <div class="image-caption">image.png</div>
+            </figure>
+
+<p>3a+b操作</p>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://cdn.nlark.com/yuque/0/2021/png/705191/1617204170110-790f84ca-85f2-4e2c-bd35-07841e87b88a.png" alt="image.png" title="">
+                </div>
+                <div class="image-caption">image.png</div>
+            </figure>
+
+<p>说明：3、7、5等常量都放在操作数栈，临时内存</p>
+<p>动态链接：myMath.calculate()，要去解析 找到对应的方法</p>
+<p>局部变量和堆：new  MyMath()</p>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://cdn.nlark.com/yuque/0/2021/png/705191/1617204681301-ed1af7be-6487-445a-b0ee-271077c47d4f.png" alt="image.png" title="">
+                </div>
+                <div class="image-caption">image.png</div>
+            </figure>
         </div>
 
         <blockquote class="post-copyright">
@@ -255,7 +387,7 @@
     <div class="content">
         
 <span class="post-time">
-    最后更新时间：<time datetime="2021-03-29T15:04:23.431Z" itemprop="dateUpdated">2021-03-29 23:04:23</time>
+    最后更新时间：<time datetime="2021-03-31T15:34:56.241Z" itemprop="dateUpdated">2021-03-31 23:34:56</time>
 </span><br>
 
 
