@@ -268,6 +268,6 @@ bipush-》push byte , etc.
 
 动态链接：myMath.calculate()，要去解析 找到对应的方法
 
-局部变量和堆：new  MyMath()
+局部变量和堆：new  MyMath()  
 
 ![image.png](https://cdn.nlark.com/yuque/0/2021/png/705191/1617204681301-ed1af7be-6487-445a-b0ee-271077c47d4f.png)
