@@ -21,13 +21,14 @@
     
     
     <meta name="keywords" content="JVM加载过程">
-    <meta name="description" content="JVM类加载JVM整体的加载过程                                                                                             image.png               launcher是一个static且new初始化的变量(即单例) lancher构造方法会初始化ext类加载器、再由得到的ext类加载">
+    <meta name="description" content="JVM类加载JVM整体的加载过程声明周期： JVM伴随Java程序的开始而开始，程序的结束而停止。一个Java程序会开启一个JVM进程，一台计算机上可以运行多个程序，也就可以运行多个JVM进程。 JVM将线程分为两种：守护线程和普通线程。守护线程是JVM自己使用的线程，比如垃圾回收（GC）就是一个守护线程。普通线程一般是Java程序的线程，只要JVM中有普通线程在执行，那么JVM就不会停止。 启动">
 <meta property="og:type" content="article">
 <meta property="og:title" content="JVM学习">
 <meta property="og:url" content="https://github.com/flyinglions-zsl/flyinglions-zsl.github.io/2021/03/28/JVM%E5%AD%A6%E4%B9%A0/index.html">
 <meta property="og:site_name" content="Zhousl&#39;s Blog">
-<meta property="og:description" content="JVM类加载JVM整体的加载过程                                                                                             image.png               launcher是一个static且new初始化的变量(即单例) lancher构造方法会初始化ext类加载器、再由得到的ext类加载">
+<meta property="og:description" content="JVM类加载JVM整体的加载过程声明周期： JVM伴随Java程序的开始而开始，程序的结束而停止。一个Java程序会开启一个JVM进程，一台计算机上可以运行多个程序，也就可以运行多个JVM进程。 JVM将线程分为两种：守护线程和普通线程。守护线程是JVM自己使用的线程，比如垃圾回收（GC）就是一个守护线程。普通线程一般是Java程序的线程，只要JVM中有普通线程在执行，那么JVM就不会停止。 启动">
 <meta property="og:image" content="https://cdn.nlark.com/yuque/0/2021/png/705191/1616934882154-8796864a-0a25-4773-83da-c87b0436e2b8.png?x-oss-process=image%252Fresize%252Cw_1500">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2021/png/705191/1617460058137-9799f525-5b37-4498-947c-c2080670edcf.png">
 <meta property="og:image" content="https://cdn.nlark.com/yuque/0/2021/png/705191/1616850631833-55a377a7-b126-40a1-a447-02cec032970e.png?x-oss-process=image%252Fresize%252Cw_1500">
 <meta property="og:image" content="https://cdn.nlark.com/yuque/0/2021/png/705191/1616938423035-31c89842-622b-48db-a80a-20c763c35da5.png">
 <meta property="og:image" content="https://cdn.nlark.com/yuque/0/2021/png/705191/1617201607561-5faaec31-3353-4ed4-9c6e-5df99c95ae7e.png">
@@ -36,8 +37,9 @@
 <meta property="og:image" content="https://cdn.nlark.com/yuque/0/2021/png/705191/1617203827373-5158c452-ea47-405b-b62d-e4090f98a6c4.png">
 <meta property="og:image" content="https://cdn.nlark.com/yuque/0/2021/png/705191/1617204170110-790f84ca-85f2-4e2c-bd35-07841e87b88a.png">
 <meta property="og:image" content="https://cdn.nlark.com/yuque/0/2021/png/705191/1617204681301-ed1af7be-6487-445a-b0ee-271077c47d4f.png">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2021/png/705191/1617499842167-f422f185-98b9-4655-873e-c3740aa9331b.png">
 <meta property="article:published_time" content="2021-03-28T14:59:18.000Z">
-<meta property="article:modified_time" content="2021-04-01T13:33:28.816Z">
+<meta property="article:modified_time" content="2021-04-04T14:30:43.315Z">
 <meta property="article:author" content="flyinglions-zsl">
 <meta property="article:tag" content="JVM加载过程">
 <meta name="twitter:card" content="summary">
@@ -174,7 +176,7 @@
     <aside class="post-widget">
         <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
             <h4>TOC</h4>
-            <ol class="post-toc"><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#JVM类加载"><span class="post-toc-number">1.</span> <span class="post-toc-text">JVM类加载</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#JVM整体的加载过程"><span class="post-toc-number">1.1.</span> <span class="post-toc-text">JVM整体的加载过程</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#loadClass的类加载过程"><span class="post-toc-number">1.2.</span> <span class="post-toc-text">loadClass的类加载过程</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#类加载器"><span class="post-toc-number">1.3.</span> <span class="post-toc-text">类加载器</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#双亲委派机制"><span class="post-toc-number">1.4.</span> <span class="post-toc-text">双亲委派机制</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#全盘委托机制"><span class="post-toc-number">1.5.</span> <span class="post-toc-text">全盘委托机制</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#自定义类加载器"><span class="post-toc-number">1.6.</span> <span class="post-toc-text">自定义类加载器</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#打破双亲委派机制"><span class="post-toc-number">1.7.</span> <span class="post-toc-text">打破双亲委派机制</span></a></li></ol></li><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#JVM内存模型"><span class="post-toc-number">2.</span> <span class="post-toc-text">JVM内存模型</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#概念图"><span class="post-toc-number">2.1.</span> <span class="post-toc-text">概念图</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#字节码解析"><span class="post-toc-number">2.2.</span> <span class="post-toc-text">字节码解析</span></a></li></ol></li></ol>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#JVM类加载"><span class="post-toc-number">1.</span> <span class="post-toc-text">JVM类加载</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#JVM整体的加载过程"><span class="post-toc-number">1.1.</span> <span class="post-toc-text">JVM整体的加载过程</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#loadClass的类加载过程"><span class="post-toc-number">1.2.</span> <span class="post-toc-text">loadClass的类加载过程</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#类加载器"><span class="post-toc-number">1.3.</span> <span class="post-toc-text">类加载器</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#双亲委派机制"><span class="post-toc-number">1.4.</span> <span class="post-toc-text">双亲委派机制</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#全盘委托机制"><span class="post-toc-number">1.5.</span> <span class="post-toc-text">全盘委托机制</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#自定义类加载器"><span class="post-toc-number">1.6.</span> <span class="post-toc-text">自定义类加载器</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#打破双亲委派机制"><span class="post-toc-number">1.7.</span> <span class="post-toc-text">打破双亲委派机制</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#Tomcat如何实现打破双亲委派机制"><span class="post-toc-number">1.8.</span> <span class="post-toc-text">Tomcat如何实现打破双亲委派机制</span></a></li></ol></li><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#JVM内存模型"><span class="post-toc-number">2.</span> <span class="post-toc-text">JVM内存模型</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#概念图"><span class="post-toc-number">2.1.</span> <span class="post-toc-text">概念图</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#字节码解析"><span class="post-toc-number">2.2.</span> <span class="post-toc-text">字节码解析</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#栈"><span class="post-toc-number">2.3.</span> <span class="post-toc-text">栈</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#Java虚拟机栈"><span class="post-toc-number">2.3.1.</span> <span class="post-toc-text">Java虚拟机栈</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#本地方法栈"><span class="post-toc-number">2.3.2.</span> <span class="post-toc-text">本地方法栈</span></a></li></ol></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#程序计数器"><span class="post-toc-number">2.4.</span> <span class="post-toc-text">程序计数器</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#堆"><span class="post-toc-number">2.5.</span> <span class="post-toc-text">堆</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#方法区"><span class="post-toc-number">2.6.</span> <span class="post-toc-text">方法区</span></a></li></ol></li><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#JVM内存参数设置"><span class="post-toc-number">3.</span> <span class="post-toc-text">JVM内存参数设置</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#堆-1"><span class="post-toc-number">3.1.</span> <span class="post-toc-text">堆</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#方法区-1"><span class="post-toc-number">3.2.</span> <span class="post-toc-text">方法区</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#栈-1"><span class="post-toc-number">3.3.</span> <span class="post-toc-text">栈</span></a></li></ol></li></ol>
         </nav>
     </aside>
 
@@ -200,7 +202,11 @@
 
         </div>
         <div class="post-content" id="post-content" itemprop="postContent">
-            <h1 id="JVM类加载"><a href="#JVM类加载" class="headerlink" title="JVM类加载"></a>JVM类加载</h1><h2 id="JVM整体的加载过程"><a href="#JVM整体的加载过程" class="headerlink" title="JVM整体的加载过程"></a>JVM整体的加载过程</h2><figure class="image-bubble">
+            <h1 id="JVM类加载"><a href="#JVM类加载" class="headerlink" title="JVM类加载"></a>JVM类加载</h1><h2 id="JVM整体的加载过程"><a href="#JVM整体的加载过程" class="headerlink" title="JVM整体的加载过程"></a>JVM整体的加载过程</h2><p>声明周期：</p>
+<p>JVM伴随Java程序的开始而开始，程序的结束而停止。一个Java程序会开启一个JVM进程，一台计算机上可以运行多个程序，也就可以运行多个JVM进程。</p>
+<p>JVM将线程分为两种：守护线程和普通线程。守护线程是JVM自己使用的线程，比如垃圾回收（GC）就是一个守护线程。普通线程一般是Java程序的线程，只要JVM中有普通线程在执行，那么JVM就不会停止。</p>
+<p>启动大概过程：</p>
+<figure class="image-bubble">
                 <div class="img-lightbox">
                     <div class="overlay"></div>
                     <img src="https://cdn.nlark.com/yuque/0/2021/png/705191/1616934882154-8796864a-0a25-4773-83da-c87b0436e2b8.png?x-oss-process=image%2Fresize%2Cw_1500" alt="image.png" title="">
@@ -212,11 +218,20 @@
 <p>lancher构造方法会初始化ext类加载器、再由得到的ext类加载器去加载app类加载器。</p>
 <p>（app类加载器父类是ext类加载器，ext类加载器原则上是引导类加载器，但引导类是c++创建的，所以其父类加载器为null）  </p>
 <p>classLoader-&gt;即app类加载器，launcher源码体现。</p>
-<h2 id="loadClass的类加载过程"><a href="#loadClass的类加载过程" class="headerlink" title="loadClass的类加载过程"></a>loadClass的类加载过程</h2><p><strong>加载&gt;&gt;验证**</strong>&gt;&gt;准备<strong><strong>&gt;&gt;解析</strong></strong>&gt;&gt;初始化<strong><strong>&gt;&gt;使用</strong></strong>&gt;**&gt;卸载</p>
+<p>ClassLoader:</p>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://cdn.nlark.com/yuque/0/2021/png/705191/1617460058137-9799f525-5b37-4498-947c-c2080670edcf.png" alt="image.png" title="">
+                </div>
+                <div class="image-caption">image.png</div>
+            </figure>
+
+<h2 id="loadClass的类加载过程"><a href="#loadClass的类加载过程" class="headerlink" title="loadClass的类加载过程"></a>loadClass的类加载过程</h2><p><strong>加载(load)&gt;&gt;链接(link)(验证**</strong>&gt;&gt;准备<strong><strong>&gt;&gt;解析)</strong></strong>&gt;&gt;初始化<strong><strong>(initialize)</strong></strong>&gt;&gt;使用<strong>**&gt;</strong>&gt;卸载</p>
 <ul>
 <li>加载：在硬盘上查找并通过IO读入字节码文件，使用到类时才会加载，例如调用类的Main()方法，new对象等等，在加载阶段会在内存中生成一个代表这个类的java.lang.Class对象，作为方法区这个类的各种数据的访问入口。</li>
-<li>验证：校验字节码文件的正确性。</li>
-<li>准备：给类的<strong>静态变量</strong>分配内存，并赋予默认值(如：int的给0，boolean的给false)。final变量直接赋值。</li>
+<li>验证：校验字节码文件的正确性(语义合法、符合逻辑)、文件格式验证(需要符合class文件格式)、元数据验证、符号引用验证(确保解析能够正确执行)等。</li>
+<li>准备：给类的<strong>静态变量</strong>分配内存，并赋予默认值(如：int的给0，boolean的给false)，final变量直接赋值。这个时候不包括实例变量，实例变量会在对象实例化的时候随着对象一块分配在Java堆中。</li>
 <li>解析：将符号引用替换为直接引用(内存地址)，该阶段会把一些静态方法（符号引用，比如main()方法）替换为指向数据所存<strong>内存的指针或句柄</strong>等(直接引用)，这就是所谓的<strong>静态链接</strong>过程。<strong>动态链接</strong>是在程序运行期间完成的将符号引用替换为直接引用（每个类名、方法、包路径等都是一个符号 存在于常量池中，运行时加载到运行时常量池中javap xx.class -v 查看）。</li>
 <li>初始化：对类的静态变量初始化为指定的值，执行静态代码块。 </li>
 </ul>
@@ -253,6 +268,7 @@
 <p>核心就是UrlClassLoader的loadClass()方法(实现双亲委派机制)和findClass()方法(装载类)。</p>
 <h2 id="打破双亲委派机制"><a href="#打破双亲委派机制" class="headerlink" title="打破双亲委派机制"></a>打破双亲委派机制</h2><p>不委托父加载器先加载了，在自定义加载器获得了直接返回。</p>
 <p>重写loadClass方法   去掉双亲委派的逻辑</p>
+<h2 id="Tomcat如何实现打破双亲委派机制"><a href="#Tomcat如何实现打破双亲委派机制" class="headerlink" title="Tomcat如何实现打破双亲委派机制"></a>Tomcat如何实现打破双亲委派机制</h2><p>基于自定义的类加载器，是自定义类型的时，不委托父加载器加载。</p>
 <h1 id="JVM内存模型"><a href="#JVM内存模型" class="headerlink" title="JVM内存模型"></a>JVM内存模型</h1><p>不同的机器对应的JVM处理机器码的方式都不同，如windows、mac系统</p>
 <p>javap -c xx.class看汇编c</p>
 <h2 id="概念图"><a href="#概念图" class="headerlink" title="概念图"></a>概念图</h2><figure class="image-bubble">
@@ -268,13 +284,10 @@
 <p>验证代码：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">package com.gx.demo.jvm;</span><br><span class="line"></span><br><span class="line">public class MyMath &#123;</span><br><span class="line"></span><br><span class="line">    public int calculate(int a, int b)&#123;</span><br><span class="line">        int result &#x3D; 0;</span><br><span class="line">        result &#x3D; (a + b)*5;</span><br><span class="line">        return result;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        MyMath myMath &#x3D; new MyMath();</span><br><span class="line">        int res &#x3D; myMath.calculate(3, 7);</span><br><span class="line">        System.out.println(res);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<p>根据验证代码 走一遍逻辑</p>
-<p>1代码</p>
-<p>2查指令 百度网盘下载</p>
-<p>3画栈中局部变量和操作数栈 变化的图逻辑</p>
-<p>4堆与方法区的关系</p>
-<p>5堆与栈的关系</p>
-<p>6程序计数器 变化，具体xx.class由字节码执行引擎执行</p>
+
+
+
+
 <h2 id="字节码解析"><a href="#字节码解析" class="headerlink" title="字节码解析"></a>字节码解析</h2><p>javap -c MyMath.class</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  public com.gx.demo.jvm.MyMath();</span><br><span class="line">    descriptor: ()V</span><br><span class="line">    flags: ACC_PUBLIC</span><br><span class="line">    Code:</span><br><span class="line">      stack&#x3D;1, locals&#x3D;1, args_size&#x3D;1</span><br><span class="line">         0: aload_0</span><br><span class="line">         1: invokespecial #1                  &#x2F;&#x2F; Method java&#x2F;lang&#x2F;Object.&quot;&lt;init&gt;&quot;:()V</span><br><span class="line">         4: return</span><br><span class="line">      LineNumberTable:</span><br><span class="line">        line 3: 0</span><br><span class="line">      LocalVariableTable:</span><br><span class="line">        Start  Length  Slot  Name   Signature</span><br><span class="line">            0       5     0  this   Lcom&#x2F;gx&#x2F;demo&#x2F;jvm&#x2F;MyMath;</span><br><span class="line"></span><br><span class="line">  public int calculate(int, int);</span><br><span class="line">    descriptor: (II)I</span><br><span class="line">    flags: ACC_PUBLIC</span><br><span class="line">    Code:&#x2F;&#x2F;一个方法对应一个栈帧，即有自己的局部变量表</span><br><span class="line">      stack&#x3D;2, locals&#x3D;4, args_size&#x3D;3&#x2F;&#x2F;a-&gt;局部变量1 b-&gt;局部变量2</span><br><span class="line">         0: iconst_0&#x2F;&#x2F;将int类型常量0压入栈 常量0</span><br><span class="line">         1: istore_3&#x2F;&#x2F; 将int类型值存入局部变量3 参数result</span><br><span class="line">         2: iload_1&#x2F;&#x2F;从局部变量1中装载int类型值 参数a</span><br><span class="line">         3: iload_2&#x2F;&#x2F;从局部变量2中装载int类型值 参数b</span><br><span class="line">         4: iadd&#x2F;&#x2F;执行int类型的加法</span><br><span class="line">         5: iconst_5&#x2F;&#x2F;将int类型常量5压入栈 得到a+b&#x3D;5</span><br><span class="line">         6: imul&#x2F;&#x2F;乘法</span><br><span class="line">         7: istore_3&#x2F;&#x2F; 将int类型值存入局部变量3 即5*10&#x3D;50</span><br><span class="line">         8: iload_3&#x2F;&#x2F;从局部变量2中装载int类型值 50</span><br><span class="line">         9: ireturn&#x2F;&#x2F;返回</span><br><span class="line">      LineNumberTable:</span><br><span class="line">        line 6: 0</span><br><span class="line">        line 7: 2</span><br><span class="line">        line 8: 8</span><br><span class="line">      LocalVariableTable:&#x2F;&#x2F;局部变量</span><br><span class="line">        Start  Length  Slot  Name   Signature</span><br><span class="line">            0      10     0  this   Lcom&#x2F;gx&#x2F;demo&#x2F;jvm&#x2F;MyMath;</span><br><span class="line">            0      10     1     a   I</span><br><span class="line">            0      10     2     b   I</span><br><span class="line">            2       8     3 result   I</span><br><span class="line"></span><br><span class="line">  public static void main(java.lang.String[]);</span><br><span class="line">    descriptor: ([Ljava&#x2F;lang&#x2F;String;)V</span><br><span class="line">    flags: ACC_PUBLIC, ACC_STATIC</span><br><span class="line">    Code:</span><br><span class="line">      stack&#x3D;3, locals&#x3D;3, args_size&#x3D;1</span><br><span class="line">         0: new           #2                  &#x2F;&#x2F; class com&#x2F;gx&#x2F;demo&#x2F;jvm&#x2F;MyMath</span><br><span class="line">         3: dup&#x2F;&#x2F;复制栈顶部一个字长内容</span><br><span class="line">         4: invokespecial #3                  &#x2F;&#x2F; Method &quot;&lt;init&gt;&quot;:()V</span><br><span class="line">         7: astore_1&#x2F;&#x2F;将引用类型或returnAddress类型值存入局部变量1 参数new的myMath，存的堆地址</span><br><span class="line">         8: aload_1&#x2F;&#x2F;从局部变量1中装载引用类型值</span><br><span class="line">         9: iconst_3&#x2F;&#x2F;将int类型常量3压入栈</span><br><span class="line">        10: bipush        7   &#x2F;&#x2F;将一个8位带符号整数压入栈 7 也占一次操作(11)</span><br><span class="line">          &#x2F;&#x2F;iconst_5 &#x3D; 8 (0x8)指令码</span><br><span class="line">          &#x2F;&#x2F;bipush &#x3D; 16 (0x10)指令码</span><br><span class="line">        12: invokevirtual #4  &#x2F;&#x2F;调度对象的方法   &#x2F;&#x2F; Method calculate:(II)I</span><br><span class="line">        15: istore_2&#x2F;&#x2F;将int类型值存入局部变量2 参数res</span><br><span class="line">        16: getstatic     #5                  &#x2F;&#x2F; Field java&#x2F;lang&#x2F;System.out:Ljava&#x2F;io&#x2F;PrintStream;</span><br><span class="line">        19: iload_2&#x2F;&#x2F;从局部变量2中装载int类型值 calculate返回的结果50</span><br><span class="line">        20: invokevirtual #6                  &#x2F;&#x2F; Method java&#x2F;io&#x2F;PrintStream.println:(I)V</span><br><span class="line">        23: return</span><br><span class="line">      LineNumberTable:</span><br><span class="line">        line 12: 0</span><br><span class="line">        line 13: 8</span><br><span class="line">        line 14: 16</span><br><span class="line">        line 15: 23</span><br><span class="line">      LocalVariableTable:</span><br><span class="line">        Start  Length  Slot  Name   Signature</span><br><span class="line">            0      24     0  args   [Ljava&#x2F;lang&#x2F;String;</span><br><span class="line">            8      16     1 myMath   Lcom&#x2F;gx&#x2F;demo&#x2F;jvm&#x2F;MyMath;</span><br><span class="line">           16       8     2   res   I</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
@@ -282,7 +295,7 @@
 <p>iconst_*  即-1-5 </p>
 <p>bipush    即<strong>-128~127</strong> </p>
 <p>sipush    即-32768~32767 </p>
-<p>ldc         即<strong>-2147483648~2147483647</strong> </p>
+<p>ldc         即<strong>-2147483648~2147483647</strong></p>
 <p>具体可见官网：<a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-6.html#jvms-6.5.iconst_i" target="_blank" rel="noopener">https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-6.html#jvms-6.5.iconst_i</a></p>
 <p>icons-》push int constant</p>
 <p>bipush-》push byte , etc.</p>
@@ -372,8 +385,51 @@
 
 <p>说明：3、7、5等常量都放在操作数栈，临时内存</p>
 <p>动态链接：myMath.calculate()，要去解析 找到对应的方法</p>
-<p>局部变量和堆：new  MyMath()  </p>
-<p><img src="https://cdn.nlark.com/yuque/0/2021/png/705191/1617204681301-ed1af7be-6487-445a-b0ee-271077c47d4f.png" alt="image.png"></p>
+<p>局部变量和堆：new  MyMath()</p>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://cdn.nlark.com/yuque/0/2021/png/705191/1617204681301-ed1af7be-6487-445a-b0ee-271077c47d4f.png" alt="image.png" title="">
+                </div>
+                <div class="image-caption">image.png</div>
+            </figure>
+
+<h2 id="栈"><a href="#栈" class="headerlink" title="栈"></a>栈</h2><h3 id="Java虚拟机栈"><a href="#Java虚拟机栈" class="headerlink" title="Java虚拟机栈"></a>Java虚拟机栈</h3><p>Java虚拟机栈是线程私有的，就是平常说的堆栈中的“栈内存”。此处指的是JVM中的运行时内存区域的概念划分，而不是JMM(java 内存模型)，每个方法在执行的同时都会创建一个栈帧(Stack Frame)，方法结束，栈内存也就自动释放了。</p>
+<p>其中包括四个部分，分别是：</p>
+<p>1局部变量表(用来存储局部变量表的，包含两部分：一是方法中的参数，二是方法中创建的局部变量。局部变量必须被初始化才能使用。包括this，FILO)</p>
+<p>2操作数栈(方法用到的常量等，FILO)</p>
+<p>3动态链接(方法中对象的引用，存的堆地址等)</p>
+<p>4方法出口(方法return到哪个地方)等信息</p>
+<h3 id="本地方法栈"><a href="#本地方法栈" class="headerlink" title="本地方法栈"></a>本地方法栈</h3><p>JVM 调用本地方法(Native)接口时使用，也是线程私有的(历史原因，之前很多接口由C/C++实现的，字节码解析后调用相应的dll文件)，这时候使用的空间就是本地方法栈。</p>
+<h2 id="程序计数器"><a href="#程序计数器" class="headerlink" title="程序计数器"></a>程序计数器</h2><p>在JVM中的运行时内存区域的概念划分中，目前自己了解到主要以下作用，其通过字节码执行引擎工作执行class文件，由字节码执行引擎修改当前这个程序计数器的值来选取下一条需要执行的字节码指令(上面图中有体现)。</p>
+<p>(以下为参考)</p>
+<p>分支、循环、跳转、异常处理、线程恢复等基础功能都需要依赖这个计数器来完成。</p>
+<p>JVM的多线程是通过线程轮流切换并分配处理器执行时间的方式来实现的，为了各条线程之间的切换后计数器能恢复到正确的执行位置，所以每条线程都会有一个独立的程序计数器。</p>
+<p>当线程正在执行一个Java方法，程序计数器记录的是正在执行的JVM字节码指令的地址；如果正在执行的是一个Natvie（本地方法），那么这个计数器的值则为空（Underfined）。</p>
+<p>程序计数器占用的内存空间很少，也是唯一一个在JVM规范中没有规定任何OutOfMemoryError（内存不足错误）的区域</p>
+<h2 id="堆"><a href="#堆" class="headerlink" title="堆"></a>堆</h2><figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://cdn.nlark.com/yuque/0/2021/png/705191/1617499842167-f422f185-98b9-4655-873e-c3740aa9331b.png" alt="image.png" title="">
+                </div>
+                <div class="image-caption">image.png</div>
+            </figure>
+
+<p>堆内存是所有线程共享的，基本上可以分为一个年轻代和一个老年代。</p>
+<p>新产生的对象都会先放到Eden区(伊甸园)，放满了后进行一次minor gc/gc root(从栈(局部变量)、方法区中去找变量的引用，一直往前找，找到根时如果没有别人对象引用，则会标志为垃圾对象，否则标志为非垃圾对象)。此时非垃圾对象从Eden区转到s0、s1，再依次反复，存活的则保存到老年代(老年代满了则会进行full gc，去掉堆和方法区中的垃圾对象，最终可能报错OOM)。</p>
+<p>Stop一the一World，简称STW，指的是Gc事件发生过程中，会产生应用程序的停顿。停顿产生时整个应用程序线程都会被暂停，没有任何响应，有点像卡死的感觉，这个停顿称为STW。</p>
+<h2 id="方法区"><a href="#方法区" class="headerlink" title="方法区"></a>方法区</h2><p>方法区也是所有线程所共享的。它用于存储已经被JVM加载的类信息(类型信息：差不多是C的对象元信息)、常量(存堆中的地址)、静态变量、即时编译器(JIT)编译后的代码等数据信息。且设有保护程序，当一个线程正在访问的时候，另一个线程不能同时加载一个类，需要延迟等待。</p>
+<p>同时，方法区中的大小是可以改变的，运行时也可以扩展，对象也可进行垃圾回收，不过条件比较苛刻，需要没有任何引用才会进行回收。</p>
+<p>JDK8之前是永久代，之后叫元空间。</p>
+<h1 id="JVM内存参数设置"><a href="#JVM内存参数设置" class="headerlink" title="JVM内存参数设置"></a>JVM内存参数设置</h1><h2 id="堆-1"><a href="#堆-1" class="headerlink" title="堆"></a>堆</h2><p>常用：</p>
+<p>-Xms：JVM初始分配的内存由-Xms指定，默认是物理内存的1/64</p>
+<p> -Xmx：JVM最大分配的内存由-Xmx指定，默认是物理内存的1/4</p>
+<p>新生代： </p>
+<p>-Xmn</p>
+<p>-Xmn2G：设置年轻代大小为2G。</p>
+<h2 id="方法区-1"><a href="#方法区-1" class="headerlink" title="方法区"></a>方法区</h2><p>-XX:MetaspaceSize 默认21MB(64位JVM)，达到该值则会进行full gc进行类型加载，同时收集器对值进行调整。</p>
+<p>-XX:MaxMetaspaceSize 默认无限(64位JVM)，即只限制于本地内存大小</p>
+<h2 id="栈-1"><a href="#栈-1" class="headerlink" title="栈"></a>栈</h2><p>-Xss 默认1M，该值设置的越小，说明一个线程栈里面能分配的栈帧就越少，但是对JVM整体来说能开启的线程数就越多。</p>
 
         </div>
 
@@ -382,7 +438,7 @@
     <div class="content">
         
 <span class="post-time">
-    最后更新时间：<time datetime="2021-04-01T13:33:28.816Z" itemprop="dateUpdated">2021-04-01 21:33:28</time>
+    最后更新时间：<time datetime="2021-04-04T14:30:43.315Z" itemprop="dateUpdated">2021-04-04 22:30:43</time>
 </span><br>
 
 

@@ -228,16 +228,9 @@
     <div class="post-content" id="post-content" itemprop="postContent">
 
     
-        JVM类加载JVM整体的加载过程
-                
-                    
-                    
-                
-                image.png
-            
-
-launcher是一个static且new初始化的变量(即单例)
-lancher构造方法会初始化ext类加载器、再由得到的ext...
+        JVM类加载JVM整体的加载过程声明周期：
+JVM伴随Java程序的开始而开始，程序的结束而停止。一个Java程序会开启一个JVM进程，一台计算机上可以运行多个程序，也就可以运行多个JVM进程。
+JVM将线程分为两种：守护线程和普通线程。守护线程是JVM自己使用的线程，比如垃圾回收（GC）就是一个守护线程。普通线程一般是Java程序的线程，只要JVM中有普通线程在执行，那么JVM就不会停止。...
     
 
         <a href="/2021/03/28/JVM%E5%AD%A6%E4%B9%A0/" class="post-more waves-effect waves-button">
