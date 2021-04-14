@@ -772,3 +772,21 @@ javap -verbose xxx.class 反编译
 
 
 ### serial收集器										
+
+
+
+# JVM调优工具及了解
+
+## 常见的调优指令
+
+
+
+### jps
+
+
+
+### jstack
+
+
+
+### jvisualvm
