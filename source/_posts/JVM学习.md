@@ -1050,19 +1050,103 @@ CMS的相关核心参数
 
 ## 常见的调优指令
 
-
-
 ### jps
+
+查看应用程序对应的进程id
+
+### jmap
+
+#### 内存
+
+查看内存信息，实例个数，占用内存的大小等
+
+jmap -histo 27500(可添加 **> ./testLog.txt** 生成txt到当前目录下)
+
+-  num：序号 
+- instances：实例数量 
+
+- bytes：占用空间大小 
+- class name：类名称，[C is a char[]，[S is a short[]，[I is a int[]，[B is a byte[]，[[I is a int[][]
+
+![img](https://cdn.nlark.com/yuque/0/2021/png/705191/1619101930292-3e6146ce-8b0a-45a9-9287-5fe6ccc86e71.png)
+
+#### 堆
+
+查看堆信息：jmap -heap 27500
+
+堆快照dump：jmap -dump:format=b,file=xxx.hprof 27500
+
+设置堆内存溢出自动dump：-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=./（生成文件路径）
 
 
 
 ### jstack
 
+得到运行java程序的java stack和native stack的信息
+
+格式： 
+
+jstack [ option ] pid 
+
+jstack [ option ] executable core 
+
+jstack [ option ] [server-id@]remote-hostname-or-IP 
+
+
+
+场景：
+
+1死锁，Deadlock
+
+2等待资源，Waiting on condition
+
+• 等待获取监视器，Waiting on monitor entry 
+
+3阻塞，Blocked（重点关注） 
+
+• 执行中，Runnable 
+
+• 暂停，Suspended 
+
+• 对象等待中，Object.wait() 或 TIMED_WAITING 
+
+• 停止，Parked 
+
+
+
+查看程序cpu及内存使用情况
+
+top -p <pid>
+
+
+
+执行 jstack 19663|grep -A 10 4cd0，得到线程堆栈信息中 4cd0 这个线程所在行的后面10行，从堆栈中可以发现导致cpu飙高的调用方法 
+
+
+
+### jinfo
+
+查看jvm的参数：jinfo -flags <pid>
+
+查看java程序的参数：jinfo -sysprops <pid>
+
+
+
+### jstat
+
+以查看堆内存各部分的使用量，以及加载类的数量。(注意：使用的jdk版本是jdk8 )
+
+命令格式： jstat [-命令选项] [vmid] [间隔时间(毫秒)] [查询次数] 
+
+
+
 
 
 ### jvisualvm
 
+1导入dump文件分析堆信息
 
+2线程dump，查看当前线程运行信息
 
 
 
