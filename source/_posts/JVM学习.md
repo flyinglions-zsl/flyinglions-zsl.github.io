@@ -1054,6 +1054,8 @@ CMS的相关核心参数
 
 查看应用程序对应的进程id
 
+
+
 ### jmap
 
 #### 内存
@@ -1138,7 +1140,21 @@ top -p <pid>
 
 命令格式： jstat [-命令选项] [vmid] [间隔时间(毫秒)] [查询次数] 
 
+常用指令：
 
+查看程序内存使用及GC压力整理情况：jstat -gc pid
+
+查看堆内存统计：jstat -gccapacity pid
+
+查看新生代内存统计：jstat -gcnewcapacity pid
+
+查看新生代垃圾回收统计：jstat -gcnew pid
+
+查看老年代内存统计：jstat -gcoldcapacity pid
+
+查看老年代垃圾回收统计：jstat -gcold pid
+
+查看元数据空间统计：jstat -gcmetacapacity pid
 
 
 
@@ -1149,6 +1165,38 @@ top -p <pid>
 2线程dump，查看当前线程运行信息
 
 
+
+## 优化思路
+
+ 先给自己的系统设置一些初始性的 JVM参数，比如堆内存大小，年轻代大小，Eden和Survivor的比例，老年代的大小，大对象的阈值，大龄对象进入老年代的阈值等。
+
+
+
+### 1.年轻代对象增长的速率
+
+jstat -gc pid 1000 10(每隔1s执行1次，共执行10次)观察EU区的使用，来估算每秒Eden区大概有多少新增的对象。当系统负荷不高时，可以将执行时间调大到1分钟甚至10分钟来观察。
+
+### 2.young gc触发的频率和单次耗时时间
+
+公式：触发频率=YGCT/YGC（jstat命令可查看，YGCT young gc总耗时单位s，YGC young gc次数）
+
+### 3.每次young gc后有多少对象是存活的且进入老年代
+
+从第二点中知道young gc频率，如果是10分钟一次那么 jstat -gc pid 600000 10，就可以通过该指令查看gc中，每次Eden区、Survivor、老年代区的使用及变化情况。众所周知，每次gc后，eden区存活对象减少，Survivor、老年代都有可能增长，这些增长的对象就是每次young gc后存活的对象，可以看出每次young gc有多少存活的对象是进入到老年代中的，推算出老年代的增长速率。
+
+### 4.Full GC的触发频率和单次耗时时间
+
+公式：触发频率=FGCT/FGC（FGCT full gc总耗时单位s，FGC full gc次数）
+
+
+
+思路：基本看来就是
+
+1尽量让每次young gc后的存活对象小于Survivor区域的50%，将存活对象留在新生代中，尽量别让对象进入老年代中。
+
+2尽量减少full gc的频率，避免频繁full gc对jvm性能的影响。
+
+3新生代或者老年代的增长过快之类的，回顾其内存分配时注意的一些点，
 
 # 常量池了解
 
