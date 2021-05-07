@@ -1270,7 +1270,7 @@ java文件被编译为class文件，即产生上面所述的class常量池。
 
 1.直接赋值
 
-```
+```java
 String str = "gx";
 ```
 
@@ -1286,7 +1286,7 @@ String str = "gx";
 
 2.new关键字
 
-```
+```java
 String str = new String("gx");
 ```
 
@@ -1306,26 +1306,156 @@ d.将内存中的引用返回给变量。
 
 3.intern()方法
 
-```
+```java
 String str = new String("gx");
 String str1 = str.intern();
 System.out.println(str == str1); //false
 ```
 
-  String中的intern方法是一个 native 的方法，当调用 intern方法时，如果池已经包含一个等于此String对象的字符串 用equals(oject)方法确定），则返回池中的字符串。否则将被加入池中并返回这个引用给变量。(jdk1.6版本需要将s1 复制到字符串常量池里)。 
+  String中的intern方法是一个 native 的方法，当调用 intern方法时，如果池已经包含一个等于此String对象的字符串 用equals(object)方法确定），则返回池中的字符串。否则将被加入池中并返回这个引用给变量。(jdk1.6版本需要将s1 复制到字符串常量池里)。 
 
 ###  字符串常量池位置 
 
 Jdk1.6及之前： 有永久代, 运行时常量池在永久代，运行时常量池包含字符串常量池 
 
-Jdk1.7：有永久代，但已经逐步“去永久代”，字符串常量池从永久代里的运行时常量池分离到堆里 
+Jdk1.7：有永久代，逐步开始抛弃方法区,将字符串常量池移至堆区.这里jdk文档并没有说运行时常量池是否也跟着移到堆区,也就是说运行时常量依然在方法区
 
 Jdk1.8及之后： 无永久代，运行时常量池在元空间，字符串常量池里依然在堆里 
+
+
 
 ### 设计原理
 
 字符串常量池底层是hotspot的C++实现的，底层类似一个 HashTable， 保存的本质上是字符串对象的引用。
 
+```java
+//示例1
+String str = new String("gx");
+String str1 = str.intern();
+System.out.println(str == str1);//false
+System.out.println("---------------------");
+//示例2
+String s1 = new String("a") + new String("bc");
+String s2 = s1.intern();
+System.out.println(s1 == s2);//true
+```
+
+先说示例2：
+
+依据JDK的版本不同，所涉及创建的string对象多少也不同。
+
+在JDK1.6及之前，因为有永久代的存在，**常量池是存在于永久代中**的，故此当调用intern()方法，即先去**字符串常量池**中寻找相等的字符串，如果**存在则返回该字符串的引用**，否则，**会在永久代重新建立一个实例**，将StringTable的一个表指向这个新创建的实例。
+
+在JDK1.7及以后，由于字符串池不在存放于永久代了，intern() 有所变动，更方便地利用堆中的对象。字符 
+
+串存在时和 JDK 1.6一样，但是**字符串不存在时不再需要重新创建实例**，可以直接**指向堆上**的实例。
+
+因此这里 JDK1.6 创建了6个对象 常量池：“a” "bc" “abc”(**abc常量池中没有新建了**) 堆：“a” "bc" “abc”
+
+ JDK1.7后创建了5个对象 常量池：“a” "bc" (**abc常量池中没有指向堆中的**) 堆：“a” "bc" “abc”
+
+(注意：是去**字符串常量池**中寻找)
+
+所以s1.intern() 拿到的是堆中的“abc” 和 s1一致
+
+
+
+示例1:
+
+同理，str指向的是堆中的引用，str1是获取的字符串常量池中的引用，不一致
+
+
+
+### 常见字符串比较问题
+
+```java
+String ss1 = "gx";
+String ss2 = "gx";
+String ss3 = "g"+"x";
+System.out.println(ss1 == ss2);//true
+System.out.println(ss1 == ss3);//true
+//基本都是字符串常量，在编译期间就被确定了。"g"+"x"都是常量，当由多个常量组合的时候，
+//它也是个常量，在编译期间会被优化成“gx”
+System.out.println("---------------------");
+String ss4 = new String("gx");
+String ss5 = "g" + new String("x");
+System.out.println(ss1 == ss4);//false
+System.out.println(ss1 == ss5);//false
+System.out.println(ss4 == ss5);//false
+//新建的字符串对象，而非常量，在编译期间无法确定，不是放在常量池中，有自己的内存地址。
+//ss5也包含新对象，无法确定，是内存地址
+System.out.println("---------------------");
+String ss6 = "gx1";
+String ss7 = "gx" + 1;
+System.out.println(ss6 == ss7);//true
+String ss8 = "gx1.1";
+String ss9 = "gx" + 1.1;
+System.out.println(ss8 == ss9);//true
+String ss10 = "gxxx";
+String ss11 = "gx" + "xx";
+System.out.println(ss10 == ss11);//true
+//JVM对于字符串常量的"+"号连接，将在程序编译期，JVM就将常量字符串的"+"连接优化为连接后的值
+System.out.println("---------------------");
+String ss12 = "gxxx";
+String ss13 = "xx";
+String ss14 = "gx" + ss13;
+System.out.println(ss12 == ss14);//false
+//字符串引用，由于在字符串的"+"连接中，有字符串引用存在，而引用的值在程序编译期是无法确定的
+//"gx" + ss13无法被编译器优化，只有在程序运行期来动态分配并将连接后的新地址赋给b。所以结果为 false。
+System.out.println("---------------------");
+String ss15 = "gxxx";
+final String ss16 = "xx";
+String ss17 = "gx" + ss16;
+System.out.println(ss15 == ss17);//true
+//final修饰的变量，它在编译时被解析为常量值的一个本地拷贝存储到自己的常量池中或嵌入到它的字节码流中
+```
+
+编译期间 常量间的 “+” 会被优化，但对象间的“+”等同于stringbuilder 即new string
+
+![屏幕快照 2021-05-07 下午9.18.12.png](https://cdn.nlark.com/yuque/0/2021/png/705191/1620393652919-436b2c76-ae28-4618-a792-d307cadd4af6.png?x-oss-process=image%2Fresize%2Cw_1500)
+
 
 
 ## 八大基本类型和对象池
+
+(1) int==========>Integer
+
+(2) short========>Short
+
+(3) long========>Long
+
+(4) byte========>Byte
+
+(5) char========>Character
+
+(6) float========>Float
+
+(7) double=======>Double
+
+(8) boolean=======>Boolean
+
+基本类型的包装类型基本都实现了常量池技术（对象池），除了Float和Double两种浮点数类型。
+
+另外实现了的5种包装类型也只能在对应值小于127的时候才会使用对象池，即对象池不负责创建和管理大于127的对象。
+
+```java
+Integer i1 = 127;
+Integer i2 = 127;
+System.out.println(i1 == i2);//true
+System.out.println("---------------------");
+Integer i3 = 128;
+Integer i4 = 128;
+System.out.println(i3 == i4);//false
+System.out.println("---------------------");
+Integer i5 = new Integer(127);
+Integer i6 = new Integer(127);
+System.out.println(i5 == i6);//false
+System.out.println("---------------------");
+Boolean b1 = false;
+Boolean b2 = false;
+System.out.println(b1 == b2);//true
+System.out.println("---------------------");
+Float f1 = 1.1f;
+Float f2 = 1.1f;
+System.out.println(f1 == f2);//false
+```
