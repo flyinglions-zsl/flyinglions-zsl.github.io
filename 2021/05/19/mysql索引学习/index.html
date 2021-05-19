@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>mysql索引学习 | Zhousl&#39;s Blog | 做她的英雄</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="索引">
+    <meta name="description" content="索引索引就是一种快速检索的、排好序的数据机构。 本质：数据结构+算法 类别及数据结构Hash表能够快速查找O(1)，但是会发生hash冲突，且不支持范围查询、排序，只支持&#x3D;、in。 二叉树 一颗相对平衡的有序二叉树，可进行插入、查找、删除。O(logn) 缺点：存在致命的倾斜性问题，如  果数据往大从小插入，或是由小从大插入 ，都会导致倾斜。即最大化查询。 红黑树相对二叉树更加平衡，查询的次数也相">
+<meta property="og:type" content="article">
+<meta property="og:title" content="mysql索引学习">
+<meta property="og:url" content="https://github.com/flyinglions-zsl/flyinglions-zsl.github.io/2021/05/19/mysql%E7%B4%A2%E5%BC%95%E5%AD%A6%E4%B9%A0/index.html">
+<meta property="og:site_name" content="Zhousl&#39;s Blog">
+<meta property="og:description" content="索引索引就是一种快速检索的、排好序的数据机构。 本质：数据结构+算法 类别及数据结构Hash表能够快速查找O(1)，但是会发生hash冲突，且不支持范围查询、排序，只支持&#x3D;、in。 二叉树 一颗相对平衡的有序二叉树，可进行插入、查找、删除。O(logn) 缺点：存在致命的倾斜性问题，如  果数据往大从小插入，或是由小从大插入 ，都会导致倾斜。即最大化查询。 红黑树相对二叉树更加平衡，查询的次数也相">
+<meta property="article:published_time" content="2021-05-19T14:54:33.000Z">
+<meta property="article:modified_time" content="2021-05-19T14:55:41.452Z">
+<meta property="article:author" content="flyinglions-zsl">
+<meta property="article:tag" content="索引">
+<meta name="twitter:card" content="summary">
+    
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="//unpkg.com/hexo-theme-material-indigo@latest/css/style.css">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu" class="hide" >
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/head.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/logo.png">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">flyinglions-zsl</h5>
+          <a href="mailto:709246423@qq.com" title="709246423@qq.com" class="mail">709246423@qq.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/"  >
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives/"  >
+                <i class="icon icon-lg icon-archives"></i>
+                归档
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags/"  >
+                <i class="icon icon-lg icon-tags"></i>
+                标签
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories/"  >
+                <i class="icon icon-lg icon-th-list"></i>
+                目录
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/flyinglions-zsl" target="_blank" >
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://www.cnblogs.com/flyinglion/" target="_blank" rel="noopener"  >
+                <i class="icon icon-lg icon-link"></i>
+                博客园
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">mysql索引学习</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="输入感兴趣的关键字">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">mysql索引学习</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2021-05-19T14:54:33.000Z" itemprop="datePublished" class="page-time">
+  2021-05-19
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Mysql%E5%AD%A6%E4%B9%A0/">Mysql学习</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#索引"><span class="post-toc-number">1.</span> <span class="post-toc-text">索引</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#类别及数据结构"><span class="post-toc-number">1.1.</span> <span class="post-toc-text">类别及数据结构</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#Hash表"><span class="post-toc-number">1.1.1.</span> <span class="post-toc-text">Hash表</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#二叉树"><span class="post-toc-number">1.1.2.</span> <span class="post-toc-text">二叉树</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#红黑树"><span class="post-toc-number">1.1.3.</span> <span class="post-toc-text">红黑树</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#B-Tree"><span class="post-toc-number">1.1.4.</span> <span class="post-toc-text">B-Tree</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#B-Tree-B-Tree加强"><span class="post-toc-number">1.1.5.</span> <span class="post-toc-text">B+Tree(B-Tree加强)</span></a></li></ol></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#引擎下实现"><span class="post-toc-number">1.2.</span> <span class="post-toc-text">引擎下实现</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#MyISAM（非聚集）"><span class="post-toc-number">1.2.1.</span> <span class="post-toc-text">MyISAM（非聚集）</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#InnoDB（聚集）"><span class="post-toc-number">1.2.2.</span> <span class="post-toc-text">InnoDB（聚集）</span></a></li></ol></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#联合索引"><span class="post-toc-number">1.3.</span> <span class="post-toc-text">联合索引</span></a></li></ol></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-mysql索引学习"
+  class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">mysql索引学习</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2021-05-19 22:54:33" datetime="2021-05-19T14:54:33.000Z"  itemprop="datePublished">2021-05-19</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Mysql%E5%AD%A6%E4%B9%A0/">Mysql学习</a></li></ul>
+
+
+
+            
+<span id="busuanzi_container_page_pv" title="文章总阅读量" style='display:none'>
+    <i class="icon icon-eye icon-pr"></i><span id="busuanzi_value_page_pv"></span>
+</span>
+
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <h1 id="索引"><a href="#索引" class="headerlink" title="索引"></a>索引</h1><p><strong>索引就是一种快速检索的、排好序的数据机构。</strong></p>
+<p>本质：数据结构+算法</p>
+<h2 id="类别及数据结构"><a href="#类别及数据结构" class="headerlink" title="类别及数据结构"></a>类别及数据结构</h2><h3 id="Hash表"><a href="#Hash表" class="headerlink" title="Hash表"></a>Hash表</h3><p>能够快速查找O(1)，但是会发生hash冲突，且不支持范围查询、排序，只支持=、in。</p>
+<h3 id="二叉树"><a href="#二叉树" class="headerlink" title="二叉树"></a>二叉树</h3><p> 一颗相对平衡的有序二叉树，可进行插入、查找、删除。O(logn)</p>
+<p>缺点：存在致命的倾斜性问题，如 </p>
+<p>果数据往大从小插入，或是由小从大插入 ，都会<strong>导致倾斜</strong>。即最大化查询。</p>
+<h3 id="红黑树"><a href="#红黑树" class="headerlink" title="红黑树"></a>红黑树</h3><p>相对二叉树更加平衡，查询的次数也相对可以接受，但是红黑树自旋后还是会发生倾斜性的问题。</p>
+<h3 id="B-Tree"><a href="#B-Tree" class="headerlink" title="B-Tree"></a>B-Tree</h3><p>叶节点具有相同的深度，叶节点的指针为空 ；</p>
+<p>所有索引元素不重复 ；</p>
+<p>节点中的数据索引从左到右<strong>递增排列</strong> </p>
+<h3 id="B-Tree-B-Tree加强"><a href="#B-Tree-B-Tree加强" class="headerlink" title="B+Tree(B-Tree加强)"></a>B+Tree(B-Tree加强)</h3><p> 非叶子节点不存储data，只存储索引(冗余)，可以放更多的索引</p>
+<p>叶子节点包含所有索引字段 </p>
+<p>每个节点都有指定的degree，相邻节点靠指针关联(链表)，<strong>值存在叶子节点上</strong>。</p>
+<h2 id="引擎下实现"><a href="#引擎下实现" class="headerlink" title="引擎下实现"></a>引擎下实现</h2><p><strong>mysql索引时如何存储的： 引擎是表级别的，持久的，是一个文件，存储在磁盘上</strong> </p>
+<h3 id="MyISAM（非聚集）"><a href="#MyISAM（非聚集）" class="headerlink" title="MyISAM（非聚集）"></a>MyISAM（非聚集）</h3><p>不支持事务、也不支持外键，优势是访问速度快，对事务完整性没有 要求或者以select，insert为主的应用基本上可 以用这个引擎来创建表，支持FULLTEXT索引，并且只为CHAR、VARCHAR和TEXT列。 </p>
+<p>frm：创建表的文件 </p>
+<p>myd：表的数据文件 </p>
+<p>myi：表的索引文件，存的地址 </p>
+<p>索引查找： 以id为索引的B+tree（myi文件），得到<strong>id对应的物理地址(叶子结点上)</strong>，然后再去myd文件查找对应的数据。以字符型，中文的为索引，存的就是ASCII，重复度很高不建议用索引(男女)，磁盘IO还是会发生，浪费资源。</p>
+<h3 id="InnoDB（聚集）"><a href="#InnoDB（聚集）" class="headerlink" title="InnoDB（聚集）"></a>InnoDB（聚集）</h3><p>该存储引擎提供了具有提交、回滚和崩溃恢复能力的事务安全。但是对比MyISAM引擎，写的处理效率会差一些，并 </p>
+<p>且会占用更多的磁盘空间以保留数据和索引。 </p>
+<p>InnoDB存储引擎的特点：支持自动增长列，支持外键约束 </p>
+<p>聚集索引 ：插入的时候会按主键排序 </p>
+<p>frm：创建表的文件 </p>
+<p>ibd：索引+数据 </p>
+<p>索引查找:以id为索引的B+tree（myi文件），叶子节点存的是id+数据（如1，a） </p>
+<p>​       以字符型，中文的(username)为索引，叶子节点存的是id；降低存储空间，减少索引创建</p>
+<p>为什么建议InnoDB表必须建主键，并且推荐使用整型的自增主键？</p>
+<p>答：mysql在建表时，会主动寻找某一个没有相同数据的列，没有则会创建一个列，相当于rowid，会浪费时间，而且在索引查找的时候，B+Tree存的是记录的ID，如果是rowid不利于查找。</p>
+<p>自增主键保证了id的唯一性和并发性，如果用uuid等，还需要每次都去比较，而且uuid字符比较可能会消耗更多的时间。</p>
+<p> 为什么非主键索引结构叶子节点存储的是主键值？(一致性和节省存储空间)</p>
+<p>答：非主键索引，比如二级索引，字符列name加的索引，叶子结点上key是name值，value是对应的记录ID，因为存的是ID，可以进行回表查询操作，更精确地查找记录，保证数据的一致性，而且也可以节省内存空间。</p>
+<h2 id="联合索引"><a href="#联合索引" class="headerlink" title="联合索引"></a>联合索引</h2><p>多个列进行的组合索引，查询需符合最左前缀原则。</p>
+<p>例：现有一个索引 a_b_c –&gt;以下组合可用 ： a,b,c ; a,b ; a 三种情况</p>
+<p>底层数据结构：</p>
+<p>也是B+Tree实现，不过非叶子结点存的是组合的值，如name、age，Alice 12， Bob 14，先对name进行排序，再对age进行排序。</p>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最后更新时间：<time datetime="2021-05-19T14:55:41.452Z" itemprop="dateUpdated">2021-05-19 22:55:41</time>
+</span><br>
+
+
+        
+        <a href="/2021/05/19/mysql%E7%B4%A2%E5%BC%95%E5%AD%A6%E4%B9%A0/" target="_blank" rel="external">https://github.com/flyinglions-zsl/flyinglions-zsl.github.io/2021/05/19/mysql%E7%B4%A2%E5%BC%95%E5%AD%A6%E4%B9%A0/</a>
+        
+    </div>
+    
+    <footer>
+        <a href="https://github.com/flyinglions-zsl/flyinglions-zsl.github.io">
+            <img src="/img/logo.png" alt="flyinglions-zsl">
+            flyinglions-zsl
+        </a>
+    </footer>
+</blockquote>
+
+        
+<div class="page-reward">
+    <a id="rewardBtn" href="javascript:;" class="page-reward-btn waves-effect waves-circle waves-light">赏</a>
+</div>
+
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E7%B4%A2%E5%BC%95/" rel="tag">索引</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://github.com/flyinglions-zsl/flyinglions-zsl.github.io/2021/05/19/mysql%E7%B4%A2%E5%BC%95%E5%AD%A6%E4%B9%A0/&title=《mysql索引学习》 — Zhousl's Blog&pic=https://github.com/flyinglions-zsl/flyinglions-zsl.github.io/img/logo.png" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://github.com/flyinglions-zsl/flyinglions-zsl.github.io/2021/05/19/mysql%E7%B4%A2%E5%BC%95%E5%AD%A6%E4%B9%A0/&title=《mysql索引学习》 — Zhousl's Blog&source=" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://github.com/flyinglions-zsl/flyinglions-zsl.github.io/2021/05/19/mysql%E7%B4%A2%E5%BC%95%E5%AD%A6%E4%B9%A0/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《mysql索引学习》 — Zhousl's Blog&url=https://github.com/flyinglions-zsl/flyinglions-zsl.github.io/2021/05/19/mysql%E7%B4%A2%E5%BC%95%E5%AD%A6%E4%B9%A0/&via=https://github.com/flyinglions-zsl/flyinglions-zsl.github.io" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://github.com/flyinglions-zsl/flyinglions-zsl.github.io/2021/05/19/mysql%E7%B4%A2%E5%BC%95%E5%AD%A6%E4%B9%A0/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between flex-row-reverse">
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/2021/04/03/lamda%E5%B8%B8%E7%94%A8%E7%82%B9%E8%AE%B0%E5%BD%95/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">lamda常用点记录</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</article>
+
+<div id="reward" class="page-modal reward-lay">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <h3 class="reward-title">
+        <i class="icon icon-quote-left"></i>
+        谢谢大爷~
+        <i class="icon icon-quote-right"></i>
+    </h3>
+    <div class="reward-content">
+        
+        <div class="reward-code">
+            <img id="rewardCode" src="/img/wx_money.jpg" alt="打赏二维码">
+        </div>
+        
+        <label class="reward-toggle">
+            <input id="rewardToggle" type="checkbox" class="reward-toggle-check"
+                data-wechat="/img/wx_money.jpg" data-alipay="/img/zfb_money.jpg">
+            <div class="reward-toggle-ctrol">
+                <span class="reward-toggle-item wechat">微信</span>
+                <span class="reward-toggle-label"></span>
+                <span class="reward-toggle-item alipay">支付宝</span>
+            </div>
+        </label>
+        
+    </div>
+</div>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+<p>
+    <span id="busuanzi_container_site_uv" style='display:none'>
+        站点总访客数：<span id="busuanzi_value_site_uv"></span>
+    </span>
+    <span id="busuanzi_container_site_pv" style='display:none'>
+        站点总访问量：<span id="busuanzi_value_site_pv"></span>
+    </span>
+</p>
+
+
+        <p>
+            
+            <span>博客内容遵循 <a rel="license noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" target="_blank">知识共享 署名 - 非商业性 - 相同方式共享 4.0 国际协议</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>flyinglions-zsl &copy; 2020 - 2021</span>
+            <span>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://github.com/flyinglions-zsl/flyinglions-zsl.github.io/2021/05/19/mysql%E7%B4%A2%E5%BC%95%E5%AD%A6%E4%B9%A0/&title=《mysql索引学习》 — Zhousl's Blog&pic=https://github.com/flyinglions-zsl/flyinglions-zsl.github.io/img/logo.png" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://github.com/flyinglions-zsl/flyinglions-zsl.github.io/2021/05/19/mysql%E7%B4%A2%E5%BC%95%E5%AD%A6%E4%B9%A0/&title=《mysql索引学习》 — Zhousl's Blog&source=" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://github.com/flyinglions-zsl/flyinglions-zsl.github.io/2021/05/19/mysql%E7%B4%A2%E5%BC%95%E5%AD%A6%E4%B9%A0/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《mysql索引学习》 — Zhousl's Blog&url=https://github.com/flyinglions-zsl/flyinglions-zsl.github.io/2021/05/19/mysql%E7%B4%A2%E5%BC%95%E5%AD%A6%E4%B9%A0/&via=https://github.com/flyinglions-zsl/flyinglions-zsl.github.io" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://github.com/flyinglions-zsl/flyinglions-zsl.github.io/2021/05/19/mysql%E7%B4%A2%E5%BC%95%E5%AD%A6%E4%B9%A0/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=https://github.com/flyinglions-zsl/flyinglions-zsl.github.io/2021/05/19/mysql%E7%B4%A2%E5%BC%95%E5%AD%A6%E4%B9%A0/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: true };
+
+
+</script>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/main.min.js"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/search.min.js" async></script>
+
+
+
+
+
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '死鬼去哪里了！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!又好了!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>
