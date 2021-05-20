@@ -112,3 +112,53 @@ ibd：索引+数据
 底层数据结构：
 
 也是B+Tree实现，不过非叶子结点存的是组合的值，如name、age，Alice 12， Bob 14，先对name进行排序，再对age进行排序。
+
+
+
+
+
+
+
+# Explain详解与索引
+
+使用EXPLAIN关键字可以模拟优化器执行SQL语句，分析查询语句或是结构的性能瓶颈 
+
+在select 语句之前增加 explain 关键字，MySQL 会在查询上设置一个标记，执行查询会返回执行计划的信息，而不是执行这条SQL 
+
+
+
+官方文档：https://dev.mysql.com/doc/refman/5.7/en/explain-output.html 
+
+
+
+## Explain的列说明
+
+![img](https://cdn.nlark.com/yuque/0/2021/png/705191/1621523649211-b302f4a2-bc10-465c-af40-3fc945147c66.png)
+
+### id列
+
+### select_type列
+
+### table列
+
+### partitions列
+
+### type列
+
+### possibile_keys列
+
+### key列
+
+### key_len列
+
+### ref列
+
+### rows列
+
+### filtered列
+
+### Extra列
+
+
+
+## 索引使用及注意事项
