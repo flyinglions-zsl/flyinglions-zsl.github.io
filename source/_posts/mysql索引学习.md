@@ -444,15 +444,25 @@ explain select * from employees where age=23 and position='dev';
 
 ![img](https://cdn.nlark.com/yuque/0/2021/png/705191/1621610072108-ab69e7e3-dea0-4fff-8739-234d3d07f471.png)
 
+### 3.不在索引列上做任何操作（计算、函数、（自动or手动）类型转换），会导致索引失效而转向全表扫描 
 
+```
+explain select * from employees where left(name,2) = 'Lu';
+```
 
+![img](https://cdn.nlark.com/yuque/0/2021/png/705191/1621612237417-cc5614e9-7ad3-42a6-a27b-69bcf354d0f8.png)
 
+### 4.存储引擎不能使用索引中范围条件右边的列 
 
+组合索引时，比如有三个字段组合
 
+```
+explain select * from employees where name = 'Lucy' and age>23 and position='dev';
+```
 
+![img](https://cdn.nlark.com/yuque/0/2021/png/705191/1621613942922-ebd6f299-8a06-45eb-adc3-bda270fe1591.png)
 
-
-组合索引时，比如有三个字段组合，中间
+从key_len可以看出，全部字段使用时是140，目前只有78，得知postion没有走索引。
 
 mysql5.6版本之前没有加入index condition pushdown，所以索引逻辑还是这样的：
 
@@ -461,3 +471,99 @@ mysql5.6版本之前没有加入index condition pushdown，所以索引逻辑还
 确定完索引范围后，则回表查询数据，再用剩下的where条件进行过滤判断。
 
 mysql5.6后加入了ICP，对于确定完了索引范围后，会用剩下的where条件对索引范围再进行一次过滤，然后再回表，再用剩下的where条件进行过滤判断。（减少回表记录数量）。
+
+### [ ](https://blog.csdn.net/Mypromise_TFS/article/details/68945293)5.尽量使用覆盖索引
+
+（只访问索引的查询（索引列包含查询列）），减少 select * 语句
+
+### select的字段是索引所相关的字段，不然无法是覆盖索引，只是const级别的查询而已。[  ](https://blog.csdn.net/Mypromise_TFS/article/details/68945293)6.mysql在使用不等于（！=或者<>），not in ，not exists 的时候无法使用索引会导致全表扫描 
+
+< 小于、 > 大于、 <=、>= 这些，mysql内部优化器会根据检索比例、表大小等多个因素整体评估是否使用索引
+
+```
+explain select * from employees where name != 'Lucy' ;
+```
+
+![img](https://cdn.nlark.com/yuque/0/2021/png/705191/1621656814033-405a96f2-4f01-4e4f-8a2b-7ef08e4b3672.png)
+
+### 7.is null 、 is not null 一般也会使索引失效
+
+```
+explain select * from employees where age is not null ;
+```
+
+![img](https://cdn.nlark.com/yuque/0/2021/png/705191/1621656901633-510e26df-0a55-46de-8fa2-932e038093c1.png)
+
+### 8.字符串不添加单引号也会使索引失效
+
+```
+explain select * from employees where name = 20;
+```
+
+![img](https://cdn.nlark.com/yuque/0/2021/png/705191/1621657038075-13948ef6-1c9f-44b1-bd36-3782a28cda12.png)
+
+
+
+### 9.模糊查询-like 用通配符开头('%xxx...')会导致索引失效
+
+```
+explain select * from employees where name like '%Lu';
+```
+
+![img](https://cdn.nlark.com/yuque/0/2021/png/705191/1621657383586-e46adf88-ba8e-4517-ae6b-78a9a425a9c4.png)
+
+```
+explain select * from employees where name like '%Lu%';
+```
+
+![img](https://cdn.nlark.com/yuque/0/2021/png/705191/1621657464590-55e7479f-7ca5-4eb4-a6e6-5532578c2dca.png)
+
+前后都是通配符时，索引还是失效，需要使用覆盖索引，即select字段是索引相关字段。
+
+```
+explain select name,age from employees where name like '%Lu%';
+```
+
+![img](https://cdn.nlark.com/yuque/0/2021/png/705191/1621657580063-fc78eea7-4347-4455-a19d-a52d7f3d757b.png)
+
+### 10.查询使用or或者in时
+
+不一定会走索引，mysql内部优化器会根据检索比例、表大小等多个因素整体评 
+
+估是否使用索引
+
+
+
+### 11.查询使用范围查询时会失效
+
+```
+explain select * from employees where age >1 and age <=1000;
+```
+
+![img](https://cdn.nlark.com/yuque/0/2021/png/705191/1621657854665-107616ef-b4c1-4c2f-b5e5-803e671e1486.png)
+
+这里可能是数据量过大或者过小的情况下，直接不走索引，如果数据量太大可以优化范围查询（即分页）
+
+如：
+
+```
+explain select * from employees where age >1 and age <=500;
+```
+
+### 12.组合索引常见示例
+
+组合索引index_a_b_c(a,b,c)
+
+| where子句                                 | 索引是否有效                               |
+| ----------------------------------------- | ------------------------------------------ |
+| a=3                                       | 是，使用了最左字段a                        |
+| a=3 and b=4                               | 是，使用了a、b                             |
+| a=3 and b=4 and c=5                       | 是，都使用了                               |
+| b=4 and c=5或者b=4或者c=5                 | 否，没使用最左字段a                        |
+| a=3 and c=5                               | a有用，c没用，b被中断了                    |
+| a=3 and b>4 and c=5                       | a、b有用，c不在范围内，b是范围查找，中断了 |
+| a=3 and b like 'AA%' and c=5              | 是，都使用了                               |
+| a=3 and b like '%AA' and c=5              | 是，使用了a                                |
+| a=3 and b like '%AA%' and c=5             | 是，使用了a                                |
+| a=3 and b like 'A%AA%' and c=5            | 是，都使用了                               |
+| like AA%相当于=常量，%AA和%AA% 相当于范围 |                                            |
