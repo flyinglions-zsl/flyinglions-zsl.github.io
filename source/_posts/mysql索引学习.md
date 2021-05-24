@@ -567,3 +567,11 @@ explain select * from employees where age >1 and age <=500;
 | a=3 and b like '%AA%' and c=5             | 是，使用了a                                |
 | a=3 and b like 'A%AA%' and c=5            | 是，都使用了                               |
 | like AA%相当于=常量，%AA和%AA% 相当于范围 |                                            |
+
+
+
+# 执行一条sql的过程
+
+## 概念图
+
+## 执行过程
