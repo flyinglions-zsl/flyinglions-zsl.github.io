@@ -9,8 +9,6 @@ tags:
 
 https://www.cs.usfca.edu/~galles/visualization/Algorithms.html
 
-
-
 # 索引
 
 **索引就是一种快速检索的、排好序的数据机构。**
@@ -352,7 +350,7 @@ key_len计算规则如下:
 
 ### filtered列
 
-explain的extended 扩展能够在原本explain的基础上额外的提供一些查询优化的信息，这些信息可以通过mysql的show warnings命令得到。(5.7之后的版本默认就有这个字段，不需要使用explain extended了。这个字段表示存储引擎返回的数据在server层过滤后，剩下多少满足查询的记录数量的比例，注意是**百分比**，不是具体记录数)
+explain的extended 扩展能够在原本explain的基础上额外的提供一些查询优化的信息，这些信息可以通过mysql的**show warnings**命令得到。(5.7之后的版本默认就有这个字段，不需要使用explain extended了。这个字段表示存储引擎返回的数据在server层过滤后，剩下多少满足查询的记录数量的比例，注意是**百分比**，不是具体记录数)
 
 ```
 EXPLAIN [EXTENDED] SELECT select_options 
@@ -409,7 +407,7 @@ EXPLAIN SELECT id,address FROM employee ORDER BY address;
 
 1） 如果select 只查询索引字段，order by 索引字段会用到索引，要不然就是全表排列；
 
-2） 如果有where 条件，比如where xx=1 order by 索引字段 asc . 这样order by 也会用到索引！
+2） 如果有where 条件，比如where xx=1 order by 索引字段 asc . 这样order by 也会用到索引！**一般情况order by没有按照索引顺序排序**
 
 6.Select tables optimized away:使用某些聚合函数(比如 max、min)来访问存在索引的某个字段。table列为null
 
@@ -417,7 +415,7 @@ EXPLAIN SELECT id,address FROM employee ORDER BY address;
 
 ## 索引使用及注意事项
 
-1.全值匹配
+### 1.全值匹配
 
 ```
 explain select * from employees where name = 'Lucy';
@@ -427,7 +425,7 @@ explain select * from employees where name = 'Lucy';
 
 ref为const
 
-2.最左前缀法则
+### 2.最左前缀法则
 
 当索引是组合索引时，需遵守最左前缀法则，即查询组合索引中的列时，从最左侧开始不能跳过列，否则索引会失效
 
@@ -474,9 +472,9 @@ mysql5.6后加入了ICP，对于确定完了索引范围后，会用剩下的whe
 
 ### [ ](https://blog.csdn.net/Mypromise_TFS/article/details/68945293)5.尽量使用覆盖索引
 
-（只访问索引的查询（索引列包含查询列）），减少 select * 语句
+（只访问索引的查询（索引列包含查询列）），减少 select * 语句。select的字段是索引所相关的字段，不然无法是覆盖索引，只是const级别的查询而已。
 
-### select的字段是索引所相关的字段，不然无法是覆盖索引，只是const级别的查询而已。[  ](https://blog.csdn.net/Mypromise_TFS/article/details/68945293)6.mysql在使用不等于（！=或者<>），not in ，not exists 的时候无法使用索引会导致全表扫描 
+### [ ](https://blog.csdn.net/Mypromise_TFS/article/details/68945293)6.mysql在使用不等于（！=或者<>），not in ，not exists 的时候无法使用索引会导致全表扫描 
 
 < 小于、 > 大于、 <=、>= 这些，mysql内部优化器会根据检索比例、表大小等多个因素整体评估是否使用索引
 
@@ -574,22 +572,163 @@ explain select * from employees where age >1 and age <=500;
 
 ## 内部组件结构
 
-大体来说，MySQL 可以分为 Server 层和存储引擎层两部分。
+大体来说，MySQL可以分为 Server 层和存储引擎层两部分。
+
+![img](https://cdn.nlark.com/yuque/0/2021/png/705191/1622037742709-593e1d4a-d5fe-4a88-ae6e-4bb807747203.png)
 
 ### server层
 
 主要包括连接器、查询缓存、分析器、优化器、执行器等，涵盖 MySQL 的大多数核心服务功能，以及所有的内置函数 （如日期、时间、数学和加密函数等），所有跨存储引擎的功能都在这一层实现，比如存储过程、触发器、视图等。 
 
-### store层
+### 存储引擎层
+
+存储引擎层负责数据的存储和提取。其架构模式是插件式的，支持 InnoDB、MyISAM、Memory 等多个存储引擎。从MySQL 5.5.5 版本开始默认存储引擎是InnoDB，即建表时没有设置引擎时，默认设置为InnoDB。
 
 
 
 ## 连接器
 
-## 词法分析器
+1.首先**第一步**，当需要使用Mysql的时候，肯定要与MySQL建立连接才行，现在基本都是用客户端工具进行连接的，比如mysql、navicat、SQLyog等。其实基本都是通过以下连接命令进行连接的：
+
+```
+mysql -h host[数据库ip] -u root -p
+```
+
+此时客户端面对的就是server层的**连接器。连接器负责跟客户端建立连接、获取权限、维持和管理连接的作用。**
+
+指令中的mysql是客户端用来跟服务端建立连接的命令，在完成经典的TCP握手后，连接器就会开始认证当前用户的身份，此时需要输入账号和密码来完成连接。
+
+- 账号或者密码错误，报错 “Access denied for user”，连接断开
+- 认证通过，连接器将会到**系统的权限表（user表）**里查找当前帐号的权限。后续这个连接里的权限判断逻辑，都依赖于此次获取的权限列表。
+
+含义：当一个账号建立连接成功后，即使当管理员**修改了当前账号的权限**时，当前连接的权限也**不会被影响**到，还在这次会话中。只有**新建立**的连接才会被影响。
+
+权限相关指令：
+
+```
+grant all privileges on *.* to 'username'@'%'; //赋权限,%表示所有(host) 
+flush privileges //刷新数据库
+update user set password=password(”123456″) where user=’root’;//更新用户密码
+show grants for root@"%"; //查看当前用户的权限
+```
+
+2.当建立连接后，一直没有别的操作，这个连接会被置于空闲状态，可通过指令**“show processlist”**查看用户状态。**当长时间没有与Server端交互时，连接器将自动断开**。
+
+自动断开时间由 **wait_timeout**参数控制，**默认时间为8小时**
+
+**查看和修改指令：**
+
+```
+show global variables like "wait_timeout"; 
+set global wait_timeout=28800; //全局的，单位秒，默认8小时
+```
+
+
+
+## 查询缓存
+
+**第二步**，当连接建立后，即可开始进行查询操作了。
+
+MySQL在接到select请求之后，会**先去查询缓存**看看之前是不是执行过这条语句。之前执行过语句及其结果会**以key-value存放在内存中**。key是查询的语句，value是查询的结果。如果你的查询在查询缓存中找到key，则直接返回查询缓存的value给客户端。
+
+如果查询语句不在查询缓存中，就会继续后面的执行流程。执行完成后，执行结果会被存入查询缓存中。
+
+**注意：从MySQL8.0开始，直接把整个查询缓存的功能删除掉。**
+
+
+
+MySQL实战中提到基本**不建议使用查询缓存，为什么**？
+
+**因为查询缓存往往利大于弊**。查询缓存**非常容易失效且频繁**，只要对一张表进行更新操作，这个表的所有查询缓存都会被清空。因此之前建立的查询缓存还没有使用就要被清空，这对于更新压力大的数据库，查询缓存的命中率更低。
+
+
+
+什么时候可以可以使用或者**建议使用查询缓存**？
+
+系统中的静态表，可以使用。如：字典表、系统配置表，这类基本不会怎么变化的表。
+
+
+
+查询缓存的配置：在my.cnf中进行修改即可。
+
+```
+show global variables like "%query_cache_type%";//查看是否开启缓存
+show status like'%Qcache%'; //查看运行的缓存信息
+
+#query_cache_type有3个值 
+0->关闭查询缓存OFF
+1->开启ON
+2->（DEMAND）当sql语句中有SQL_CACHE 关键词时才缓存
+//如
+select SQL_CACHE from user where name='root';
+```
+
+
+
+## 分析器
+
+**第三步**，当select查询没有命中缓存时，这时候就要真正的开始执行select语句了。
+
+首先，MySQL需要知道select语句要操作什么，即解析select语句。
+
+1. 通过select关键字判断是查询语句
+2. 词法分析，识别各个字符串代表的是什么，如user代表表名、id代表列名等
+
+1. 语法分析，根据其规则，判断整个sql的语法是否正确；错误则会报错
+
+
+
+**原理**:
+
+分析器分成6个主要步骤完成对sql语句的分析 
+
+1、词法分析 
+
+2、语法分析 
+
+3、语义分析 
+
+4、构造执行树 
+
+5、生成执行计划 
+
+6、计划的执行
+
+
+
+例如：
+
+![img](https://cdn.nlark.com/yuque/0/2021/png/705191/1622041602935-708c4036-cf78-4c8b-a09a-72fdf2c7e8f9.png)
+
+语法树文章：https://en.wikipedia.org/wiki/LR_parser。
 
 ## 优化器
 
+**第四步**，当分析器分析的包括语法和语义都正确后，MySQL基本就了解了select语句需要做的操作。此时MySQL会经过优化器处理。
+
+优化器是在表里面**有多个索引**的时候，决定使用哪个索引；或者在一个语句有**多表关联**（join）的时候，决定各个表的连接顺序。
+
+优化器的作用就是决定选择使用哪一个更加高效的方案(MySQL数据库使用的是基于成本的优化器，估算成本为CPU代价+IO代价)。当优化器阶段完成后，这个语句的执行方案就确定下来了，然后进入执行器阶段。
+
 ## 执行器
+
+**第五步**，优化器选定了执行方案后，进入到执行器来执行sql。
+
+当执行sql的时候，会先进行权限校验(**即连接器时拿到的权限列表**)，如果没有权限则会报错提示。如果权限认证成功，在打开表的时候，执行器会拿到表的引擎设置，用对应引擎提供的接口执行。
+
+
+
+```
+select * from user where id=7;
+```
+
+执行过程为：
+
+1. 调用InnoDB引擎接口取表T的第一行，判断id值是否等于7，如果不是则跳过，如果是则存到结果集中。
+2. 遍历整个表，调用引擎接口取下一行，重复以上的相同逻辑，直到取到表T的最后一行。
+
+1. 执行器将上面的遍历过程中所有满足id=7的行组成结果集全部返回给客户端。
+
+具体可通过数据库的慢查询日志中查看 rows_examined 字段(表示这个语句执行过程中扫描了多少行)。
 
 ## bin-log
