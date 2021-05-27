@@ -731,4 +731,46 @@ select * from user where id=7;
 
 具体可通过数据库的慢查询日志中查看 rows_examined 字段(表示这个语句执行过程中扫描了多少行)。
 
+## redo-log
+
+redo log 是 InnoDB 中用来实现**崩溃恢复**的日志。
+
+InnoDB 会将更新操作的内容保存到内存缓冲区中，在合适的时机或不得已的情况下再把缓冲区的数据更新到磁盘中，这样可以减少磁盘的随机读写，提高更新操作的性能。但是一旦程序崩溃，缓冲区中的数据就会丢失，为了实现崩溃恢复，InnoDB引入 redo log，执行更新语句的时候不但需要把更新的数据保存到内存缓冲区，还需要把更新的数据写到redo log，这样在程序崩溃之后，能够根据redo log进行数据恢复，redo log是顺序写入的，因此能够保证更新操作的性能。这就是Mysql中经常说到的WAL技术（Write-Ahead Logging）。
+
+redo log 又被称为 物理日志，记录的是“在某个数据页上做了什么修改”。
+
+redo log 是固定大小的，采用循环写的方式；但是循环写是有条件的，当redo log写满以后，需要把相应的脏页写到磁盘（刷脏页），才能够对redo log进行“循环写”。
+
 ## bin-log
+
+binlog 是 Mysql Server 用来实现**备份、复制、数据**恢复等功能的二进制日志。
+
+binlog是Server层实现的二进制日志,他会记录cud操作。Binlog有以下几个特点： 
+
+1、Binlog在MySQL的**Server层实现**（引擎共用） 
+
+2、Binlog为逻辑日志,记录的是一条语句的原始逻辑 (数据更新或潜在发生更新的SQL语句)
+
+3、Binlog不限大小,追加写入,不会覆盖以前的日志
+
+
+
+binlog 有以下三种格式：
+
+- Statement： 每一条修改数据的 sql 都会记录在日志中。
+- Row：不记录sql语句上下文相关信息，就保存哪条记录被修改。
+
+- Mixed: 以上两种格式的混合使用，一般的语句修改使用statment格式保存；如一些函数，statement无法完成主从复制的操作，则采用row格式保存。
+
+
+
+**需要在my.cnf中配置**
+
+```
+ mysql> show variables like '%log_bin%'; 查看bin‐log是否开启 
+ mysql> flush logs; 会多一个最新的bin‐log日志 
+ mysql> show master status; 查看最后一个bin‐log日志的相关信息 
+ mysql> reset master; 清空所有的bin‐log日志
+```
+
+redo-log 和 bin-log 参考：[https://blog.zhenlanghuo.top/2020/02/06/Mysql%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%E2%80%94%E2%80%94%E9%87%8D%E5%81%9A%E6%97%A5%E5%BF%97%E4%B8%8E%E5%BD%92%E6%A1%A3%E6%97%A5%E5%BF%97/](https://blog.zhenlanghuo.top/2020/02/06/Mysql学习笔记——重做日志与归档日志/)
