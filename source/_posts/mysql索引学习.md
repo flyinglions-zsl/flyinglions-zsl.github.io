@@ -774,3 +774,106 @@ binlog 有以下三种格式：
 ```
 
 redo-log 和 bin-log 参考：[https://blog.zhenlanghuo.top/2020/02/06/Mysql%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%E2%80%94%E2%80%94%E9%87%8D%E5%81%9A%E6%97%A5%E5%BF%97%E4%B8%8E%E5%BD%92%E6%A1%A3%E6%97%A5%E5%BF%97/](https://blog.zhenlanghuo.top/2020/02/06/Mysql学习笔记——重做日志与归档日志/)
+
+# 索引实战
+
+## 常见具体索引案例
+
+```
+#例子：联合索引
+KEY `idx_name_age_position` (`name`,`age`,`position`) USING BTREE ;
+```
+
+### 第一个字段使用范围查询，索引失效
+
+```
+explain select * from employees where name > 'LiLei' and age = 22 
+and position = 'manager';
+```
+
+![img](https://cdn.nlark.com/yuque/0/2021/png/705191/1622470901483-b9a67bdf-6b18-425b-abe8-9865eb54f1e9.png)
+
+#### 1.强制使用索引
+
+```
+explain select * from employees force index(idx_name_age_position) 
+where name > 'LiLei' and age = 22 and position = 'manager';
+```
+
+![img](https://cdn.nlark.com/yuque/0/2021/png/705191/1622470959865-5a024840-3106-4459-80c2-41b33ae2c9f7.png)
+
+**key_len 为74**，说明第一个字段生效了。
+
+总结：mysql默认是**不走索引**的，当**强行使用**索引时，虽然其rows少了许多，但**不一定效率就会更好**，实际开发中需要对比使用。
+
+
+
+#### 2.使用覆盖索引优化
+
+```
+explain select `name`,`age`,`position` from employees 
+where name > 'LiLei' and age = 22 and position = 'manager';
+```
+
+![img](https://cdn.nlark.com/yuque/0/2021/png/705191/1622471392378-c9a2558e-f8f0-457b-9c61-ae081709b74f.png)
+
+### in和or在表数据量大的情况下会走索引，表记录不多时会全表扫描
+
+```
+EXPLAIN SELECT * FROM employees WHERE name in ('LiLei','HanMeimei') 
+AND age = 22 AND position ='manager';
+```
+
+![img](https://cdn.nlark.com/yuque/0/2021/png/705191/1622471569748-fc1fa7c6-06eb-444d-a19b-6e96a124e802.png)
+
+### like 'LL%' 一般都走索引，与表数据大小无关
+
+```
+EXPLAIN SELECT * FROM employees WHERE name like  'LiLei%'  
+AND age = 22 AND position ='manager';
+```
+
+![img](https://cdn.nlark.com/yuque/0/2021/png/705191/1622471715695-548fcbb3-d90d-427f-8fa8-981c06df8a18.png)
+
+
+
+like 'LL%' 涉及概念，**索引下推。**
+
+**问题：一般来说，此例子中， 只会有name字段的索引，后两个没用到，因为根据name字段，在索引树上得到的数据中(索引行)，age和position是无序的，没办法更好的使用索引。**
+
+#### 索引下推
+
+索引条件下推优化（Index Condition Pushdown (ICP) ）是MySQL5.6添加的，用于优化数据查询。  
+
+- 不使用索引条件下推优化时，存储引擎通过索引(name like 'LiLei')检索到数据，然后**拿到对应叶子节点上的id簇**，返回给MySQL服务器进行回表查询，服务器然后**根据剩下字段条件**判断符合的数据，返回结果集。 
+- 当使用索引条件下推优化时，如果存在某些被索引的列的判断条件时，MySQL服务器将这一部分判断条件传递给存储引擎，然后由存储引擎通过判断索引是否符合MySQL服务器传递的条件，只有当索引符合条件时才会将数据检索出来返回给MySQL服务器。(**即先用索引的字段条件判断，过滤不符合的记录后，再拿到id回表查询，有效的减少回表的次数**)
+
+
+
+对于InnDB引擎只适用于二级索引，因为InnDB的聚簇索引会将整行数据读到InnDB的缓冲区(**叶子结点保存了全行数据**)，这样一来索引条件下推的主要目的(减少IO次数)就失去了意义。因为数据已经在内存中了，不再需要去读取了，并不会起到减少查询全行数据的效果。
+
+```
+SET optimizer_switch = 'index_condition_pushdown=off'; #默认开启
+SET optimizer_switch = 'index_condition_pushdown=on';
+```
+
+
+
+### Mysql引擎是如何选择合适的索引的
+
+mysql提供了一个trace工具进行分析。
+
+感觉大概就是sql执行的过程相对应起来看：
+
+- 1分析器进行sql的词义分析、语法分析等
+- 2优化器对sql进行相应的优化，mysql估算出表里涉及的各种方案所需要花费的代价--**cost，定下所需要的方案**
+
+- 3执行器执行第二步确认的方案
+
+参考：https://iluoy.com/articles/203
+
+
+
+### 常见对于sql的优化场景
+
+#### order by和group by优化
