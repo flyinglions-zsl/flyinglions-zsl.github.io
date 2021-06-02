@@ -922,7 +922,23 @@ trace中：sort_mode信息里显示< sort_key, additional_fields >或者< sort_k
 - 如果字段的总长度**小于**max_length_for_sort_data ，那么使用 单路排序模式
 - 如果字段的总长度**大于**max_length_for_sort_data ，那么使用 双路排序模式
 
+#### 分页查询优化
 
+
+
+#### Join查询优化
+
+
+
+#### in和exsits优化
+
+
+
+#### count查询优化
+
+
+
+### 常见优化方法
 
 
 
