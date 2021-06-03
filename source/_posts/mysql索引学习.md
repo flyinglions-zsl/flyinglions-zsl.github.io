@@ -917,24 +917,33 @@ trace中：sort_mode信息里显示< sort_key, rowid >
 
 trace中：sort_mode信息里显示< sort_key, additional_fields >或者< sort_key, packed_additional_fields >
 
-
-
 - 如果字段的总长度**小于**max_length_for_sort_data ，那么使用 单路排序模式
 - 如果字段的总长度**大于**max_length_for_sort_data ，那么使用 双路排序模式
 
 #### 分页查询优化
 
-
+https://www.cnblogs.com/youyoui/p/7851007.html
 
 #### Join查询优化
 
+mysql的表关联常见有两种算法 
 
+- Nested-Loop Join 算法 
+- Block Nested-Loop Join 算法
 
 #### in和exsits优化
 
 
 
 #### count查询优化
+
+字段有索引：count(*)≈count(1)>count(字段)>count(主键 id) //字段有索引，count(字段)统计走二级索引，二 
+
+级索引存储数据比主键索引少，所以count(字段)>count(主键 id) 
+
+字段无索引：count(*)≈count(1)>count(主键 id)>count(字段) //字段没有索引count(字段)统计走不了索引， 
+
+count(主键 id)还可以走主键索引，所以count(主键 id)>count(字段) 
 
 
 
