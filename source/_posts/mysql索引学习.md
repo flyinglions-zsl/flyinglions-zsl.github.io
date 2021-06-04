@@ -922,18 +922,262 @@ trace中：sort_mode信息里显示< sort_key, additional_fields >或者< sort_k
 
 #### 分页查询优化
 
-https://www.cnblogs.com/youyoui/p/7851007.html
+参考：https://www.cnblogs.com/youyoui/p/7851007.html
+
+**语法**：分页查询使用简单的 limit 子句就可以实现。limit 子句声明如下：
+
+```
+SELECT * FROM table LIMIT [offset,] rows | rows OFFSET offset
+```
+
+- offset 指定第一个返回记录行的偏移量，注意从0开始，默认为0
+- rows   指定返回记录行的最大数目
+
+- 如果只给定一个参数：如limit 10 它表示返回rows
+
+
+
+例：(**主键递增的情形，id没有断档**)
+
+![img](https://cdn.nlark.com/yuque/0/2021/png/705191/1622796227163-32b20cb0-ce26-43a6-b8e7-8d8947f7c563.png)
+
+```
+select * from user limit 100,10;
+```
+
+表示**offset**从100开始，取的是101-110的10条数据。
+
+一般默认主键id排序，**等效于 101<=id<=110**
+
+```
+select * from user order by id limit 100,10;
+```
+
+看似只查询了 10 条记录，实际这条 SQL 是先读取 110 条记录，然后抛弃前 100 条记录，再读到后面 10 条想要的数据。
+
+
+
+**现象**：
+
+**验证偏移量变化带来的时间影响**：
+
+```
+select * from user order by id limit 10,100;
+select * from user order by id limit 100,100;
+select * from user order by id limit 1000,100;
+select * from user order by id limit 10000,100;
+select * from user order by id limit 100000,100;
+```
+
+![img](https://cdn.nlark.com/yuque/0/2021/png/705191/1622796510087-c602849a-b50c-41e6-b1cd-75f58d43b067.png)
+
+结论：在偏移量大于10W数据后，时间花费就会比较久。
+
+
+
+**验证记录变化带来的时间影响**：
+
+```
+select * from user order by id limit 100,10;
+select * from user order by id limit 100,100;
+select * from user order by id limit 100,1000;
+select * from user order by id limit 100,10000;
+select * from user order by id limit 100,100000;
+```
+
+![img](https://cdn.nlark.com/yuque/0/2021/png/705191/1622796748754-4402100f-bbaa-44b9-a422-20d908a4bdba.png)
+
+结论：当偏移量在差不多时，记录小时基本花费时间差不多。随着记录多而时间久。
+
+
+
+**优化**：
+
+1.使用id限定（假设数据表的id是连续递增的）
+
+执行时间对比：
+
+```
+select * from user limit 900000,100;
+```
+
+![img](https://cdn.nlark.com/yuque/0/2021/png/705191/1622797256474-cdab7aaa-3edb-473e-a8cd-d29711ab8f3a.png)
+
+```
+select * from user where id>900000 limit 100;
+```
+
+![img](https://cdn.nlark.com/yuque/0/2021/png/705191/1622797468239-bd46cf64-980d-408e-979b-e3b11696a88c.png)
+
+执行计划对比：
+
+```
+explain select * from user limit 900000,100;//执行计划
+```
+
+![img](https://cdn.nlark.com/yuque/0/2021/png/705191/1622797344734-eee97499-da24-4aab-9f44-a3f0c48c0a65.png)
+
+```
+explain select * from user where id>900000 limit 100;//执行计划
+```
+
+![img](https://cdn.nlark.com/yuque/0/2021/png/705191/1622797553308-b008e0f5-1c62-4e6f-9d45-435c45bfe91e.png)
+
+结论：使用id远快于直接limit，但是会存在问题，如果id是不连续的时，查询的记录肯定不同。
+
+因此有两个必要条件：
+
+- id为自增的
+- 结果按照id排序
+
+注：**当然，这里也有根据非主键字段排序，比如添加了索引的字段，但是不一定会走索引，mysql引擎会判断执行的成本，选择具体的执行方案。**
+
+
+
+2.使用子查询或者join
+
+```
+select * from user limit 900000,100;
+select id from user limit 900000,100;
+select * from user where id>=(select id from user limit 900000,1) limit 100;
+select * from user a inner join (select id from user limit 900000,100) b
+on a.id=b.id ;
+```
+
+![img](https://cdn.nlark.com/yuque/0/2021/png/705191/1622803330922-5b54f68c-c9ab-4c7b-8f34-f5b85b72dde9.png)
+
+
+
+
 
 #### Join查询优化
 
-mysql的表关联常见有两种算法 
+驱动表概念：
+
+- inner join连接时，小表做驱动表，并不一定是排在前面的表就是驱动表。
+- left join连接时，左表是驱动表，右表是被驱动表。
+
+- right join连接时，右表是驱动表，左表是被驱动表。
+
+
+
+**mysql的表关联常见有两种算法：** 
 
 - Nested-Loop Join 算法 
 - Block Nested-Loop Join 算法
 
+```
+--表结构
+CREATE TABLE IF NOT EXISTS `user1`(
+   `id` INT UNSIGNED AUTO_INCREMENT,
+   `num` int(11),
+	 `num2` int(11),
+   PRIMARY KEY ( `id` ),
+	 KEY inx_nnum(`num`)
+)ENGINE=InnoDB DEFAULT CHARSET=utf8;
+--user2和user1表结构一致，user1插入1w数据，user2插入1百数据
+```
+
+Nested-Loop Join 算法概念：
+
+顾名思义，是指**嵌套循环算法**，即将驱动表/外部表的结果集作为**循环基础数据**，然后循环从该结果集**每次获取一条**数据作为**下一个表的过滤条件**查询数据，然后**合并结果**。如果有多表join，则将**前面的表的结果集**作为循环数据，取到每行再到联接的下一个表中**循环匹配**，获取结果集返回给客户端。
+
+举例：
+
+
+
+```
+explain select * from user1 a inner join user2 b on a.num = b.num;//num有索引
+```
+
+![img](https://cdn.nlark.com/yuque/0/2021/png/705191/1622819539531-bffc3f40-b0b8-4cd9-b386-aaee8a64cd18.png)
+
+大致取数逻辑：
+
+1. **此时驱动表是b表，被驱动表是a表**。会先从b中读取一行数据，如果有条件会先过滤条件，再拿出一行数据
+2. 从上一步的数据中，拿出关联字段num，去a表中查找对应数据
+
+1. 取出a表中符合条件的数据行，再和b表获取的数据结果合并，放到结果集中
+2. 重复前面三个步骤，循环结束，将结果集返回给客户端
+
+简化就是：b表100次扫描，每一次b的关联条件num去a中找数据，又在a中相对应的扫描了100次(可以认为最中只扫描了一行完整数据)，即整个过程总共扫描了200行(**磁盘扫描**)。
+
+
+
+如果有多层join时，最前面的join结果集会当作下一层的驱动表来查询。
+
+就像代码中的循环：
+
+```
+for(;;) //外层循环 
+{ 
+	for(;;) //内层循环 
+	{ ... }
+}
+```
+
+Block Nested Loop Join (BNLJ)算法:
+
+BNLJ，块嵌套循环。BNLJ是优化版的NLJ，BNLJ区别于NLJ的地方是**它加入了缓冲区join buffer**，它的作用是外层驱动表可以**先将一部分数据**事先存到join buffer中，然后**再和内层的被驱动表进行条件匹配**，匹配成功的记录将会连接后存入结果集，等待全部循环结束后，将结果集发给client即完成一次join。
+
+
+
+例子：
+
+```
+explain select * from user1 a inner join user2 b on a.num2 = b.num2;//num2无索引
+```
+
+![img](https://cdn.nlark.com/yuque/0/2021/png/705191/1622820370600-d74e59cf-1b32-4b33-9af5-3b91e92b955d.png)
+
+大致取数逻辑：
+
+1. **此时驱动表是b表，被驱动表是a表**。将b的所有数据都放到缓冲区中
+2. 再将a表中每一行数据都取出来，与缓冲区中的数据做对比
+
+1. 把满足join关联条件的数据返回给客户端
+
+简化就是：a、b两个表都进行了一次全表扫描，扫描总数即为a+b的数据总量=10100。但是缓冲区中的数据是没有顺序的，因此对于a表(被驱动表)中的每一行数据，都要与之b表(驱动表)做b表数据总量100次的判断，所以**内存中**需要判断1w*100=1百万次。
+
+
+
+MySQL使用Join Buffer有以下**要点**:
+
+1.  join_buffer_size变量决定buffer大小。 
+2.  只有在join类型为all, index, range的时候才可以使用join buffer。 
+
+1.  能够被buffer的每一个join都会分配一个buffer, 也就是说一个query最终可能会使用多个join buffer。 
+2.  第一个nonconst table不会分配join buffer, 即便其扫描类型是all或者index。 
+
+1.  在join之前就会分配join buffer, 在query执行完毕即释放。 
+2.  join buffer中只会保存参与join的列, 并非整个数据行。 
+
+**用BNL磁盘扫描次数少很多，相比于磁盘扫描，BNL的内存计算会快得多。**
+
 #### in和exsits优化
 
+概念：
 
+- 当A表中数据多于B表中的数据时，这时我们使用IN优于EXISTS
+- 当B表中数据多于A表中的数据时，这时我们使用EXISTS优于IN
+
+- 如果两张表中的数据差不多时那么是使用IN还是使用EXISTS差别不大。
+- EXISTS子查询只返回true或者false，因此子查询中的select * from 可以是select 1或者其他
+
+```
+--A数据>B数据
+select * from A where id in (select id from B);
+--相当于
+for(select id from B){ 
+			select * from A where A.id = B.id 
+}
+--A数据<B数据
+select * from A where exists (select 1 from B where B.id = A.id) 
+--相当于
+for(select * from A){ 
+			select * from B where B.id = A.id 
+}
+```
 
 #### count查询优化
 
@@ -945,11 +1189,13 @@ mysql的表关联常见有两种算法
 
 count(主键 id)还可以走主键索引，所以count(主键 id)>count(字段) 
 
+**count常见优化方法**
 
+- 建表选择好对应的引擎，如myisam引擎会将count总行数，记录在磁盘中，查询不需要计算总行数。而innodb的机制不会，需要计算。
+- show table status查看
 
-### 常见优化方法
-
-
+- 维护总行数数据加入缓存中
+- 维护计数的表，来专门处理
 
 ### 索引的设计原则
 
