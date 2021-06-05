@@ -1396,29 +1396,82 @@ count(主键 id)还可以走主键索引，所以count(主键 id)>count(字段)
 
 查看加锁的表：show open tables；
 
+
+
 #### 间隙锁(Gap Lock) 
 
 顾名思义，间隙锁又称为区间锁，就是一锁就**锁的是一个区间，两个值的空隙**。其隶属于行锁，即触发条件必然是命中索引，所以当查询条件是范围查询时，假设没有查询到有效存在的记录，或者范围中间-表确实缺少的记录，表都会将其进行锁定。且其只会在**REPEATABLE_READ时才生效。**
 
 如存在以下数据：
 
-```
-id name age
-1  x1   1
-2	 x2		2
-3	 x3		3
-14 x14	14
-30 x30	30
-```
+![img](https://cdn.nlark.com/yuque/0/2021/png/705191/1622908147291-55b5c0bf-13b8-4aee-bf13-418a6c140b97.png)
 
-此时间隙区间可以划分为：(3,14),(14,20),(20,正无穷) 三个区间。
+此时间隙区间可以划分为：(2,5),(5,10),(10,正无穷) 三个区间。
+
+测试1:
 
 ```
-update table set name='x666' where id > 3 and id < 14;
+update stock set money='66' where id > 2 and id < 5;
 ```
 
-那么锁定的区间为(3,14]，是个左开右闭的区间。不包含3，包含14，不包含大于14的，都无法修改数据。
+那么锁定的区间为(2,5]，是个左开右闭的区间。不包含2，包含5，不包含大于5的，都无法修改数据。
+
+![img](https://cdn.nlark.com/yuque/0/2021/png/705191/1622908247584-971b82b9-babc-46ad-88f3-353e734cc3d9.png)
+
+另一个事务中：
+
+```
+update stock set money='66' where id=2;
+INSERT INTO `Test`.`stock` (`id`,`name`, `money`) VALUES (4,'zsl4', '340');
+```
+
+![img](https://cdn.nlark.com/yuque/0/2021/png/705191/1622908322360-e2e80c1e-09f0-42b7-894e-b6b18691b8b0.png)
+
+测试2:
+
+```
+update stock set money='66' where id > 2 and id < 11;
+```
+
+(11,无穷)被锁了
+
+```
+INSERT INTO `Test`.`stock` (`id`,`name`, `money`) VALUES (12,'zsl4', '340');
+```
+
+![img](https://cdn.nlark.com/yuque/0/2021/png/705191/1622908801356-a901b80e-3d36-4247-8f24-44cb13ac0a20.png)
 
 
 
 #### 临键锁(Next-key Locks)
+
+mysql的行锁默认就是使用的临键锁，**临键锁是由行锁和间隙锁共同实现的**。
+
+间隙锁的触发条件是命中索引，范围查询没有匹配到相关记录。而临键锁恰好相反，临键锁的触发条件也是**查询条件命中索引**，不过，临键锁**有匹配到数据库记录**。
+间隙锁所**锁定的区间是一个左开右闭的集合**，而临键锁**锁定是当前记录的区间和下一个记录的区间。**
+
+
+
+InnoDB的行锁是针对索引加的锁，不是针对记录加的锁。并且该索引不能失效，否则都会从行锁升级为表锁。 
+
+
+
+#### 行锁分析 
+
+通过检查InnoDB_row_lock状态变量来分析系统上的行锁的争夺情况 
+
+```
+show status like 'innodb_row_lock%'; 
+```
+
+对各个状态量的说明如下： 
+
+Innodb_row_lock_current_waits: 当前正在等待锁定的数量 
+
+Innodb_row_lock_time: 从系统启动到现在锁定总时间长度 
+
+Innodb_row_lock_time_avg: 每次等待所花平均时间 
+
+Innodb_row_lock_time_max：从系统启动到现在等待最长的一次所花时间
+
+Innodb_row_lock_waits:系统启动后到现在总共等待的次数
