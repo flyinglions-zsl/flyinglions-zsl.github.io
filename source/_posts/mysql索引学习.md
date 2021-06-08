@@ -526,9 +526,7 @@ explain select name,age from employees where name like '%Lu%';
 
 ### 10.查询使用or或者in时
 
-不一定会走索引，mysql内部优化器会根据检索比例、表大小等多个因素整体评 
-
-估是否使用索引
+不一定会走索引，mysql内部优化器会根据检索比例、表大小等多个因素整体评估是否使用索引
 
 
 
@@ -702,13 +700,19 @@ select SQL_CACHE from user where name='root';
 
 语法树文章：https://en.wikipedia.org/wiki/LR_parser。
 
+
+
 ## 优化器
 
 **第四步**，当分析器分析的包括语法和语义都正确后，MySQL基本就了解了select语句需要做的操作。此时MySQL会经过优化器处理。
 
 优化器是在表里面**有多个索引**的时候，决定使用哪个索引；或者在一个语句有**多表关联**（join）的时候，决定各个表的连接顺序。
 
+
+
 优化器的作用就是决定选择使用哪一个更加高效的方案(MySQL数据库使用的是基于成本的优化器，估算成本为CPU代价+IO代价)。当优化器阶段完成后，这个语句的执行方案就确定下来了，然后进入执行器阶段。
+
+
 
 ## 执行器
 
@@ -741,9 +745,13 @@ redo log 又被称为 物理日志，记录的是“在某个数据页上做了�
 
 redo log 是固定大小的，采用循环写的方式；但是循环写是有条件的，当redo log写满以后，需要把相应的脏页写到磁盘（刷脏页），才能够对redo log进行“循环写”。
 
+
+
 ## bin-log
 
 binlog 是 Mysql Server 用来实现**备份、复制、数据**恢复等功能的二进制日志。
+
+
 
 binlog是Server层实现的二进制日志,他会记录cud操作。Binlog有以下几个特点： 
 
@@ -774,6 +782,10 @@ binlog 有以下三种格式：
 ```
 
 redo-log 和 bin-log 参考：[https://blog.zhenlanghuo.top/2020/02/06/Mysql%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%E2%80%94%E2%80%94%E9%87%8D%E5%81%9A%E6%97%A5%E5%BF%97%E4%B8%8E%E5%BD%92%E6%A1%A3%E6%97%A5%E5%BF%97/](https://blog.zhenlanghuo.top/2020/02/06/Mysql学习笔记——重做日志与归档日志/)
+
+
+
+
 
 # 索引实战
 
@@ -857,6 +869,8 @@ SET optimizer_switch = 'index_condition_pushdown=off'; #默认开启
 SET optimizer_switch = 'index_condition_pushdown=on';
 ```
 
+参考：https://juejin.cn/post/6844904017332535304
+
 
 
 ### Mysql引擎是如何选择合适的索引的
@@ -875,6 +889,28 @@ mysql提供了一个trace工具进行分析。
 
 
 ### 常见对于sql的优化场景
+
+
+
+MySQL关于索引的一些基础知识要点：
+
+• a、EXPLAIN结果中的key_len只显示了条件检索子句需要的索引长度，但 ORDER BY、GROUP BY 子句用到的索引则不计入 key_len 统计值； 
+
+• b、联合索引(composite index)：多个字段组成的索引，称为联合索引； 例如：ALTER TABLE t ADD INDEX `idx` (col1, col2, col3) 
+
+• c、覆盖索引(covering index)：如果查询需要读取到索引中的一个或多个字段，则可以**从索引树**中直接取得结果集，称为覆盖索引； 例如：SELECT col1, col2 FROM t; 
+
+• d、最左原则(prefix index)：如果查询条件检索时，只需要匹配联合索引中的最左顺序一个或多个字段，称为最左索引原则，或者叫最左前缀； 例如：SELECT * FROM t WHERE col1 = ? AND col2 = ?; 
+
+• e、在老版本（大概是5.5以前，具体版本号未确认核实）中，查询使用联合索引时，可以不区分条件中的字段顺序，在这以前是需要按照联合索引的创建顺序书写SQL条件子句的； 例如：SELECT * FROM t WHERE col3 = ? AND col1 = ? AND col2 = ?; 
+
+• f、MySQL截止目前还只支持多个字段都是正序索引，不支个别字段持倒序索引； 例如：ALTER TABLE t ADD INDEX `idx` (col1, col2, col3 DESC)，这里的DESC只是个预留的关键字，目前还不能真正有作用 
+
+• g、联合索引中，如果查询条件中最左边某个索引列使用范围查找，则只能使用前缀索引，无法使用到整个索引； 例如：SELECT * FROM t WHERE col1 = ? AND col2 >= ? AND col3 = ?; 这时候，只能用到 idx 索引的最左2列进行检索，而col3条件则无法利用索引进行检索 
+
+• h、InnoDB引擎中，二级索引实际上包含了主键索引值；
+
+
 
 #### order by和group by优化
 
@@ -917,8 +953,12 @@ trace中：sort_mode信息里显示< sort_key, rowid >
 
 trace中：sort_mode信息里显示< sort_key, additional_fields >或者< sort_key, packed_additional_fields >
 
+
+
 - 如果字段的总长度**小于**max_length_for_sort_data ，那么使用 单路排序模式
 - 如果字段的总长度**大于**max_length_for_sort_data ，那么使用 双路排序模式
+
+
 
 #### 分页查询优化
 
@@ -1154,6 +1194,8 @@ MySQL使用Join Buffer有以下**要点**:
 
 **用BNL磁盘扫描次数少很多，相比于磁盘扫描，BNL的内存计算会快得多。**
 
+
+
 #### in和exsits优化
 
 概念：
@@ -1189,6 +1231,8 @@ for(select * from A){
 
 count(主键 id)还可以走主键索引，所以count(主键 id)>count(字段) 
 
+
+
 **count常见优化方法**
 
 - 建表选择好对应的引擎，如myisam引擎会将count总行数，记录在磁盘中，查询不需要计算总行数。而innodb的机制不会，需要计算。
@@ -1196,6 +1240,8 @@ count(主键 id)还可以走主键索引，所以count(主键 id)>count(字段)
 
 - 维护总行数数据加入缓存中
 - 维护计数的表，来专门处理
+
+
 
 ### 索引的设计原则
 
@@ -1236,6 +1282,8 @@ count(主键 id)还可以走主键索引，所以count(主键 id)>count(字段)
 
 
 
+
+
 # 事务与锁机制
 
 ## 事务基本
@@ -1265,6 +1313,11 @@ count(主键 id)还可以走主键索引，所以count(主键 id)>count(字段)
 保存点：savepoint 保存点名称；回滚到某个点： rollback to 保存点名称； 删除保存点：release savepoint xxx
 
 [
+
+
+
+
+
 
 ](https://blog.csdn.net/z646721826/article/details/79412459)
 
@@ -1306,6 +1359,8 @@ count(主键 id)还可以走主键索引，所以count(主键 id)>count(字段)
 
 ### 隔离级别
 
+#### 分类
+
 ![img](https://cdn.nlark.com/yuque/0/2021/png/705191/1622902060822-1a121b81-9129-4e3c-8345-947557975df8.png)
 
 **READ_UNCOMMITTED：**能够读取到没有被提交的数据。
@@ -1314,7 +1369,7 @@ count(主键 id)还可以走主键索引，所以count(主键 id)>count(字段)
 
 **REPEATABLE_READ**：一个事务第一次读过某条记录后，即使其他事务修改了该记录的值并且提交，该事务之后再读该条记录时，读到的仍是第一次读到的值，而不是每次都读到不同的数据，这就是可重复读。（**mysql5.7默认**）
 
-**SERLALIZABLE**：以上3种隔离级别都允许对同一条记录同时进行读-读、读-写、写-读的并发操作，如果我们不允许读-写、写-读的并发操作，可以使用SERIALIZABLE隔离级别，**因为其会对每一条执行sql都进行上锁**(包括select，也只包括当前执行的条件，如select * from tab where id=1，但别的事务id=2是可以操作的)，于此操作都是串行的。
+**SERLALIZABLE**：以上3种隔离级别都允许对同一条记录同时进行读-读、读-写、写-读的并发操作，如果我们不允许读-写、写-读的并发操作，可以使用SERIALIZABLE隔离级别，**因为其会对每一条执行sql都进行上锁**(包括select，也只包括当前执行的条件，如select * from tab where id=1，但别的事务id=2是可以操作的)，于此操作都是串行的。（在此级别下，都是通过加锁互斥来实现的）
 
 
 
@@ -1795,4 +1850,6 @@ MySQL缓冲池加入了一个“老生代停留时间窗口”的机制：
 
 
 
-#### 管理与淘汰缓冲池
+#### 数据在引擎中流转图
+
+![img](https://cdn.nlark.com/yuque/0/2021/png/705191/1623140952750-15f33bce-e45a-4594-ba8c-2a9aa9252e0e.png)
