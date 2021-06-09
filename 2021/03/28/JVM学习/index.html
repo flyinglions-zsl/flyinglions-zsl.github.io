@@ -20,14 +20,14 @@
     <meta name="theme-color" content="#3F51B5">
     
     
-    <meta name="keywords" content="">
+    <meta name="keywords" content="JVM">
     <meta name="description" content="JVM类加载JVM整体的加载过程声明周期： JVM伴随Java程序的开始而开始，程序的结束而停止。一个Java程序会开启一个JVM进程，一台计算机上可以运行多个程序，也就可以运行多个JVM进程。 JVM将线程分为两种：守护线程和普通线程。守护线程是JVM自己使用的线程，比如垃圾回收（GC）就是一个守护线程。普通线程一般是Java程序的线程，只要JVM中有普通线程在执行，那么JVM就不会停止。 启动">
 <meta property="og:type" content="article">
 <meta property="og:title" content="JVM学习">
 <meta property="og:url" content="https://github.com/flyinglions-zsl/flyinglions-zsl.github.io/2021/03/28/JVM%E5%AD%A6%E4%B9%A0/index.html">
 <meta property="og:site_name" content="Zhousl&#39;s Blog">
 <meta property="og:description" content="JVM类加载JVM整体的加载过程声明周期： JVM伴随Java程序的开始而开始，程序的结束而停止。一个Java程序会开启一个JVM进程，一台计算机上可以运行多个程序，也就可以运行多个JVM进程。 JVM将线程分为两种：守护线程和普通线程。守护线程是JVM自己使用的线程，比如垃圾回收（GC）就是一个守护线程。普通线程一般是Java程序的线程，只要JVM中有普通线程在执行，那么JVM就不会停止。 启动">
-<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2021/png/705191/1616934882154-8796864a-0a25-4773-83da-c87b0436e2b8.png">
+<meta property="og:image" content="https://github.com/2021/03/28/JVM%E5%AD%A6%E4%B9%A0/JVM%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B.png">
 <meta property="og:image" content="https://cdn.nlark.com/yuque/0/2021/png/705191/1617460058137-9799f525-5b37-4498-947c-c2080670edcf.png">
 <meta property="og:image" content="https://cdn.nlark.com/yuque/0/2021/png/705191/1616850631833-55a377a7-b126-40a1-a447-02cec032970e.png">
 <meta property="og:image" content="https://cdn.nlark.com/yuque/0/2021/png/705191/1616938423035-31c89842-622b-48db-a80a-20c763c35da5.png">
@@ -61,11 +61,12 @@
 <meta property="og:image" content="https://cdn.nlark.com/yuque/0/2021/png/705191/1619101930292-3e6146ce-8b0a-45a9-9287-5fe6ccc86e71.png">
 <meta property="og:image" content="https://cdn.nlark.com/yuque/0/2021/png/705191/1619447796774-ecb4e7fb-a3c3-463a-b24a-37b7ca0bddc3.png">
 <meta property="og:image" content="https://cdn.nlark.com/yuque/0/2021/png/705191/1620393652919-436b2c76-ae28-4618-a792-d307cadd4af6.png?x-oss-process=image%252Fresize%252Cw_1500">
-<meta property="article:published_time" content="2021-03-28T14:59:18.099Z">
-<meta property="article:modified_time" content="2021-05-07T13:33:45.404Z">
+<meta property="article:published_time" content="2021-03-28T14:59:18.000Z">
+<meta property="article:modified_time" content="2021-06-09T14:54:14.021Z">
 <meta property="article:author" content="flyinglions-zsl">
+<meta property="article:tag" content="JVM">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://cdn.nlark.com/yuque/0/2021/png/705191/1616934882154-8796864a-0a25-4773-83da-c87b0436e2b8.png">
+<meta name="twitter:image" content="https://github.com/2021/03/28/JVM%E5%AD%A6%E4%B9%A0/JVM%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B.png">
     
     <link rel="shortcut icon" href="/favicon.ico">
     <link rel="stylesheet" href="//unpkg.com/hexo-theme-material-indigo@latest/css/style.css">
@@ -176,10 +177,12 @@
         <h1 class="title">JVM学习</h1>
         <h5 class="subtitle">
             
-                <time datetime="2021-03-28T14:59:18.099Z" itemprop="datePublished" class="page-time">
+                <time datetime="2021-03-28T14:59:18.000Z" itemprop="datePublished" class="page-time">
   2021-03-28
 </time>
 
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/JVM/">JVM</a></li></ul>
 
             
         </h5>
@@ -207,9 +210,11 @@
     <div class="post-card">
         <h1 class="post-card-title">JVM学习</h1>
         <div class="post-meta">
-            <time class="post-time" title="2021-03-28 22:59:18" datetime="2021-03-28T14:59:18.099Z"  itemprop="datePublished">2021-03-28</time>
+            <time class="post-time" title="2021-03-28 22:59:18" datetime="2021-03-28T14:59:18.000Z"  itemprop="datePublished">2021-03-28</time>
 
             
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/JVM/">JVM</a></li></ul>
+
 
 
             
@@ -224,13 +229,7 @@
 <p>JVM伴随Java程序的开始而开始，程序的结束而停止。一个Java程序会开启一个JVM进程，一台计算机上可以运行多个程序，也就可以运行多个JVM进程。</p>
 <p>JVM将线程分为两种：守护线程和普通线程。守护线程是JVM自己使用的线程，比如垃圾回收（GC）就是一个守护线程。普通线程一般是Java程序的线程，只要JVM中有普通线程在执行，那么JVM就不会停止。</p>
 <p>启动大概过程：</p>
-<figure class="image-bubble">
-                <div class="img-lightbox">
-                    <div class="overlay"></div>
-                    <img src="https://cdn.nlark.com/yuque/0/2021/png/705191/1616934882154-8796864a-0a25-4773-83da-c87b0436e2b8.png" alt="img" title="">
-                </div>
-                <div class="image-caption">img</div>
-            </figure>
+<img src="/2021/03/28/JVM%E5%AD%A6%E4%B9%A0/JVM%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B.png" class="">
 
 <p>launcher是一个static且new初始化的变量(即单例)</p>
 <p>lancher构造方法会初始化ext类加载器、再由得到的ext类加载器去加载app类加载器。</p>
@@ -878,17 +877,10 @@
 </ul>
 <p>缺点：</p>
 <ul>
-<li><ul>
-<li><ul>
-<li><ul>
-<li>对CPU资源敏感。在并发阶段，它虽然不会导致用户线程停顿，但是会因为<strong>占用了一部分线程</strong>(或者说CPU资源)而导致应用程序变慢，<strong>总吞吐量会降低</strong>。如果CPU数量较少时，如2个CPU，需要分出一半的运算能力区执行收集器线程，就会导致用户程序的执行速度忽然降低50%。</li>
+<li>​        对CPU资源敏感。在并发阶段，它虽然不会导致用户线程停顿，但是会因为<strong>占用了一部分线程</strong>(或者说CPU资源)而导致应用程序变慢，<strong>总吞吐量会降低</strong>。如果CPU数量较少时，如2个CPU，需要分出一半的运算能力区执行收集器线程，就会导致用户程序的执行速度忽然降低50%。<ul>
 <li>无法处理浮动垃圾。在并发标记和并发清理阶段又产生的垃圾，这种垃圾会导致另一次Full GC的产生，即下一次gc处理。</li>
 <li>接上一点。如果在运行期间预留的内存无法满足程序需要时，就会出现一次“Concurrent Mode Failure”并发失败。即在上一次垃圾回收还没执行完时，然后垃圾回收又被触发的情况，<strong>特别是产生浮动垃圾的时候</strong>(并发标记和并发清理阶)，一边回收，系统一边运行，没回收完就再次触发了Full GC，此时就会<strong>进入STW，临时启用Serial Old收集器来重新进行老年代的垃圾收集，这里会一直等待收集完成(等待时间很长)。</strong></li>
 <li><strong>基于“标记-清除”的算法，会导致收集结束时会有大量空间碎片产生。空间碎片过多，给大对象分配内存带来很大麻烦，如果没有内存则会触发Full GC。</strong></li>
-</ul>
-</li>
-</ul>
-</li>
 </ul>
 </li>
 </ul>
@@ -1078,7 +1070,7 @@
     <div class="content">
         
 <span class="post-time">
-    最后更新时间：<time datetime="2021-05-07T13:33:45.404Z" itemprop="dateUpdated">2021-05-07 21:33:45</time>
+    最后更新时间：<time datetime="2021-06-09T14:54:14.021Z" itemprop="dateUpdated">2021-06-09 22:54:14</time>
 </span><br>
 
 
@@ -1104,6 +1096,8 @@
 
         <div class="post-footer">
             
+	<ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/JVM/" rel="tag">JVM</a></li></ul>
+
 
             
 <div class="page-share-wrap">
