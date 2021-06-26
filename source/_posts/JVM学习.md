@@ -1479,3 +1479,4 @@ Float f1 = 1.1f;
 Float f2 = 1.1f;
 System.out.println(f1 == f2);//false
 ```
+
