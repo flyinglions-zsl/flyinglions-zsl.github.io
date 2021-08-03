@@ -485,12 +485,161 @@ bgsave 子进程运行后，开始读取主线程的内存数据，并把它们�
 
 
 
-
-
-## AOF持久
+### 定义
 
 只追加文件（ append-only file,AOF ）
 
+RDB方式不能提供强一致性(不耐久)，如果Redis服务因为某些原因崩溃，那么服务器将会丢失最近写入的、没有被保存到rdb文件中去的数据。
+
+AOF的出现很好的解决了数据持久化的实时性，AOF以独立日志的方式记录每次写命令，重启时再重新执行AOF文件中的命令来恢复数据。**AOF会先把命令追加在AOF缓冲区，然后根据对应策略写入硬盘(appendfsync)**。
+
+### 配置说明(自动触发)
+
+```
+#是否打开AOF持久化功能
+appendonly yes
+#AOF文件名称
+appendfilename "appendonly.aof"
+
+#同步频率 有三种，默认everysec
+#appendfsync always 
+appendfsync everysec 
+# appendfsync no
+#always 	命令写入aof缓冲区后，每一次写入都需要同步，
+#					直到写入磁盘（阻塞，系统调用fsync）结束后返回。
+
+#everysec 每秒的命令写入aof缓冲区后，在写入系统缓冲区直接返回（系统调用write），
+#					然后有专门线程每秒执行写入磁盘（阻塞，系统调用fsync）后返回。
+#					并且在故障时只会丢失 1 秒钟的数据。
+
+#no 			命令写入aof缓冲区后，在写入系统缓冲区直接返回（系统调用write）。
+#					之后写入磁盘（阻塞，系统调用fsync）的操作由操作系统负责，通常最长30s。
+
+no-appendfsync-on-rewrite no
+#aof文件自上一次重写后文件大小增长了100%则再次触发重写
+auto-aof-rewrite-percentage 100
+#如果文件大小小于此值不会触发AOF，默认64MB
+auto-aof-rewrite-min-size 64mb
+```
 
 
-## 混合持久
+
+### 手动处理(手动触发)
+
+```
+127.0.0.1:6379> incr readcount
+(integer) 1
+127.0.0.1:6379> incr readcount
+(integer) 2
+127.0.0.1:6379> incr readcount
+(integer) 3
+127.0.0.1:6379> incr readcount
+(integer) 4
+127.0.0.1:6379> set zsl 666 ex  1000
+OK
+
+#对应appendonly.aof 中日志为
+*2
+$4
+incr
+$9
+readcount
+*2
+$4
+incr
+$9
+readcount
+*2
+$4
+incr
+$9
+readcount
+*2
+$4
+incr
+$9
+readcount
+$3
+zsl
+$3
+666
+*3
+$9
+PEXPIREAT
+$3
+zsl
+$13
+1627972694321#时间戳
+```
+
+注：这是一种resp协议格式数据，*后面的数字代表命令有多少个参数，$号后面的数字代表这个参数有几个字符，如果执行带过期时间的set命令，aof文件里记录的是并不是执行的原始命令，而是记录key过期的时间戳。 
+
+
+
+aof手动重写
+
+```
+127.0.0.1:6379> bgrewriteaof
+Background append only file rewriting started
+
+*2
+$4
+incr
+$9
+readcount
+4
+```
+
+- 多条写入命令可以合并成一条，体积变小
+
+- 重写后AOF文件只保留最终数据的写入命令
+
+
+
+在执行 BGREWRITEAOF命令时，Redis 服务器会维护一个 AOF 重写缓冲区，该缓冲区会在子进程创建新AOF文件期间，记录服务器执行的所有写命令。当子进程完成创建新AOF文件的工作之后，服务器会将重写缓冲区中的所有内容追加到新AOF文件的末尾，使得新旧两个AOF文件所保存的数据库状态一致。最后，服务器用新的AOF文件替换旧的AOF文件，以此来完成AOF文件重写操作。
+
+## 对比
+
+|          | RDB          | AOF              |
+| -------- | ------------ | ---------------- |
+| 文件体积 | 大           | 小               |
+| 恢复速度 | 快           | 慢               |
+| 启动级别 | 低           | 高               |
+| 数据安全 | 容器丢失数据 | 需要看配置的策略 |
+
+## 4.0混合持久
+
+### 定义
+
+工作中一般很少使用RDB模式来恢复内存状态，如上分析，容易丢失大量的数据等。
+
+通常使用AOF方式的日志重放，但是其效率又远比RDB的慢的多，当Redis数据量大的时候，启动花费的时间会特别久。在Redis4.0版本，提供了一个解决方案--混合持久化。
+
+
+
+### 配置
+
+```
+#开启配置，前提是必须开启aof
+aof-use-rdb-preamble yes
+```
+
+如果开启了混合持久化。
+
+AOF在重写时，不再是**单纯将内存数据转换为RESP命令写入AOF文件**，而是将重写**这一刻之前的内存做RDB快照**处理，并且将RDB快照内容和增量的AOF修改内存数据的命令**存在一起**，都写入新的AOF文件，新的文件一开始不叫appendonly.aof，等到重写完新的AOF文件才会进行改名，覆盖原有的AOF文件，完成新旧两个AOF文件的替换。 
+
+于是在 Redis 重启的时候，可以先加载 RDB 的内容，然后再重放增量 AOF 日志就可以完全替代之前的 AOF 全量文件重放，因此重启效率大幅得到提升。 
+
+文件内容大致结构：
+
+![img](https://cdn.nlark.com/yuque/0/2021/png/705191/1627974601142-8498a046-c935-4e91-90ca-079962c2f660.png)
+
+
+
+# Redis常用架构
+
+## 主从架构
+
+
+
+## 哨兵架构
