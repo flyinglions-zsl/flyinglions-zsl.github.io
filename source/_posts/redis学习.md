@@ -906,6 +906,22 @@ Replication ID, offset
 
 - 如果主节点版本够新，但是runid与从节点发送的runid不同，或从节点发送的offset之后的数据已不在复制积压缓冲区中(在队列中被挤出了)，则回复+FULLRESYNC <runid> <offset>，表示要进行全量复制，其中runid表示主节点当前的runid，offset表示主节点当前的offset，从节点保存这两个值，以备使用。
 
+#### 无磁盘化复制
+
+master在内存中直接创建rdb，然后发送给slave，不会在自己本地落地磁盘
+
+通过配置repl-diskless-sync、repl-diskless-sync-delay，等待一定时长再开始复制，因为要等更多slave重新连接过来统一发送。
+
+```tex
+repl-diskless-sync no：作用于全量复制阶段，控制主节点是否使用diskless复制（无盘复制）。所谓diskless复制，是指在全量复制时，主节点不再先把数据写入RDB文件，而是直接写入slave的socket中，整个过程中不涉及硬盘；diskless复制在磁盘IO很慢而网速很快时更有优势。需要注意的是，截至Redis3.0，diskless复制处于实验阶段，默认是关闭的。
+
+repl-diskless-sync-delay 5：该配置作用于全量复制阶段，当主节点使用diskless复制时，该配置决定主节点向从节点发送之前停顿的时间，单位是秒；只有当diskless复制打开时有效，默认5s。之所以设置停顿时间，是基于以下两个考虑：(1)向slave的socket的传输一旦开始，新连接的slave只能等待当前数据传输结束，才能开始新的数据传输 (2)多个从节点有较大的概率在短时间内建立主从复制。
+```
+
+#### 过期key处理
+
+slave不会过期key，只会等待master过期key。如果master过期了一个key，或者通过LRU淘汰了一个key，那么会模拟一条del命令发送给slave。
+
 ###  复制风暴问题
 
 复制风暴是指**多个从节点**对**同一主节点**或者对**同一台机器的多个主节点**短时间内发起全量复制的过程。
@@ -941,6 +957,8 @@ Replication ID, offset
 
 ![img](https://cdn.nlark.com/yuque/0/2021/png/705191/1628956978186-e3d7be87-396a-49eb-8544-b94f51f447b0.png)
 
+### 参考
 
+[https://www.cnblogs.com/kismetv/p/9236731.html](https://www.cnblogs.com/kismetv/p/9236731.html#t21)
 
 ## 哨兵架构
