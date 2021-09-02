@@ -961,4 +961,118 @@ slave不会过期key，只会等待master过期key。如果master过期了一个
 
 [https://www.cnblogs.com/kismetv/p/9236731.html](https://www.cnblogs.com/kismetv/p/9236731.html#t21)
 
+
+
 ## 哨兵架构
+
+### 概念图
+
+![img](https://cdn.nlark.com/yuque/0/2021/png/705191/1630396508294-5ce99221-5bfe-4063-a087-517a17503009.png)
+
+### 原理
+
+Redis 的哨兵Sentinel是一种特殊的服务/机制，它不提供读写服务，主要用来监控其它的Redis实例节点。
+
+通过 sentinel 模式启动redis后，自动监控 Master/Slave的运行状态，基本原理是：心跳机制 + 投票裁决。
+
+
+
+简单来说，哨兵的作用就是监控 Redis 系统的运行状况。它的功能包括以下两个：
+
+1.监控主数据库和从数据库是否正常运行；
+
+2.主数据库出现故障时自动将从数据库转换为主数据库。
+
+
+
+哨兵模式主要有下面几个内容：
+ **监控（ Monitoring ）**：Sentinel 会定期检查主从服务器是否处于正常工作状态。
+ **提醒（ Notification ）**：当被监控的某个 Redis 服务器出现异常时，Sentinel 可以通过API 向管理员或者其他应用程序发送通知。
+ **自动故障迁移（Automatic failover）**：当一个主服务器不能正常工作时，Sentinel 会开始一次自动故障迁移操作，它会将失效主服务器的其中一个从服务器升级为新的主服务器，并让失效主服务器的其他从服务器改为复制新的主服务器；当客户端试图连接失效的主服务器时，集群也会向客户端返回新主服务器的地址， 使得集群可以使用新主服务器代替失效服务器。
+
+
+
+**优点**
+
+1. 哨兵模式主从可以切换，具备基本的故障转移能力；
+2. 哨兵模式具备主从模式的所有优点。
+
+**缺点**
+
+1.  哨兵模式也很难支持在线扩容操作；
+2.  集群的配置信息管理比较复杂
+
+
+
+### 配置
+
+Redis Sentinel 是一个分布式系统，你可以在一个架构中运行多个 Sentinel 进程（ progress ）。
+
+主要是这个配置：
+
+```
+#sentinel monitor <master‐redis‐name> <master‐redis‐ip> <master‐redis‐port> <quorum>
+#quorum是一个数字，指明当有多少个sentinel认为
+#一个master失效时(值一般为:sentinel总数/2+ 1)，master才算真正失效
+#Testmaster 这个名字可以随便取，客户端访问时会用到
+sentinel monitor Testmaster 127.0.0.1 6379 2
+```
+
+当redis以sentinel模式启动后，会将哨兵集群的**元数据信息**写入**所有sentinel的配置文件里**去(追加在文件的 最下面) ；如果主从节点有变动情况，sentinel集群也会第一时间感知到，从而选举新的主节点(如主节点了挂了时)，对应的**所有sentinel的配置文件**的元数据信息也会改变(info 查看)。
+
+ 				
+
+ 			
+
+### 代码
+
+StringRedisTemplate默认采用的是**String的序列化策略**，保存的key和value都是采用此策略序列化保存的。 RedisTemplate默认采用的是**JDK的序列化策略**，保存的key和value都是采用此策略序列化保存的。 
+
+
+
+## 其它原子操作
+
+### LUA脚本
+
+熟悉常用的几个指令。
+
+https://zhuanlan.zhihu.com/p/77484377
+
+### redis管道
+
+可以将多个请求放到管道中，一次性提交，降低请求时间。但是中间错误的不会停止，后面对应下标会返回对应的错误信息。
+
+https://zhuanlan.zhihu.com/p/64381987
+
+
+
+
+
+## 主从集群
+
+```
+#总的hash槽 16384个：0-16383，会为每个主节点分配hash slot
+#都建在一个集群文件夹下
+# 修改新增节点 8001文件夹下的redis.conf配置文件
+vim /usr/local/redis-cluster/8001/redis.conf
+# 修改如下内容：
+port:8001
+dir /usr/local/redis-cluster/8001/
+cluster-config-file nodes-8001.conf
+
+#然后启动8001节点
+/usr/local/redis-5.0.3/src/redis-server /usr/local/redis-cluster/8001/redis.conf
+
+#加入集群
+使用add-node命令新增一个主节点8001(master)，前面的ip:port为新增节点，
+后面ip:port为已知存在节点，看到日志最后有"[OK] New node added correctly"提示代表新节点加入成功
+/usr/local/redis-5.0.3/src/redis-cli -a zhuge --cluster 
+add-node 127.0.0.1:8001 127.0.0.1:6379
+ #注意：当添加节点成功以后，新增的节点不会有任何数据，因为它还没有分配任何的slot(hash槽)，
+ #我们需要为新节点手工分配hash槽
+ /usr/local/redis-5.0.3/src/redis-cli -a root --cluster reshard 127.0.0.1:8001
+```
+
+
+
+参考：https://zhuanlan.zhihu.com/p/190246769
