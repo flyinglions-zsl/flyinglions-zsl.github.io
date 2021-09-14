@@ -1513,3 +1513,79 @@ OOM command not allowed when used memory"，此时Redis只响应读操作。
 当存在热点数据时，LRU的效率很好，但偶发性的、周期性的批量操作会导致LRU命中率急剧下降，缓存污染情况比较严重。这时使用LFU可能更好点。
 
 根据自身业务类型，配置好maxmemory-policy(默认是**noeviction**)，推荐使用volatile-lru。如果不设置最大内存，当 Redis 内存超出物理内存限制时，内存的数据会开始和磁盘产生频繁的交换 (swap)，会让 Redis 的性能急剧下降。 当Redis运行在主从模式时，只有主结点才会执行过期删除策略，然后把删除操作”del key”同步到从结点删除数据。
+
+
+
+# Redis事务
+
+## 概念
+
+redis中的事务与传统关系型数据库（如mysql）的事务是**不同的**。
+
+
+
+redis中的事务是**一组命令的集合**，事务与命令都是最小执行单位，原理是先将属于一个事务里的所有命令都发送给Redis，然后Redis一次执行这些命令。以及保证一个事务内的命令一次执行而不被其他命令插入影响。
+
+
+
+**错误处理区别**
+
+在关系型数据库中：如果事务块中某一条命令出错，事务会执行回滚。
+
+在redis中：不会执行回滚，而是会继续执行后续的命令。因为redis的事务**没有关系型数据库的回滚(rollback)功能**。因此需要开发者在事务执行出错时自己处理。
+
+## 事务指令
+
+1.**watch**
+
+用于**监视一个或多个key**，如果在事务执行之前这个或（这些）key被其他命令所改动，事务将被中断。
+
+```
+watch('mykey1','mykey2')
+```
+
+2.**unwatch**
+
+用于**取消watch命令**对所有key的监视。
+
+
+
+3.**multi**
+
+用于标记一个**事务块的开始**，之后的所有命令都存放在队列，等遇到exec命令再执行。
+
+```
+multi();
+```
+
+4.**exec**
+
+用于执行事务块内所有的命令，如果命令被中断，返回false
+
+
+
+5.**discard**
+
+用于取消事务，放弃执行事务块内的所有命令
+
+## 代码实现
+
+```
+@Bean
+public StringRedisTemplate redisTemplate(RedisConnectionFactory redisConnectionFactory) {
+    StringRedisTemplate template = new StringRedisTemplate();
+    template.setConnectionFactory(redisConnectionFactory);
+    template.setEnableTransactionSupport(true); //打开事务支持
+    return template;
+}
+//使用 @Transactional 对 Redis 事务管理
+//配置事务管理器
+@Bean
+public PlatformTransactionManager transactionManager(DataSource dataSource) throws SQLException {
+    return new DataSourceTransactionManager(dataSource);
+}
+```
+
+把事务的支持打开，spring在每次操作之后是不会主动关闭连接的，达到最大连接数后不会继续操作；而关闭了事务会主动close。
+
+参考：https://www.jianshu.com/p/c9f5718e58f0
